@@ -1,12 +1,12 @@
 backend:
   name: github
-  repo: https://github.com/xiaoz/hargo.git
+  repo: xiaoz/hargo-shop
   branch: main
   base_url: https://hargo.pages.dev
 
 media_folder: static/images
 public_folder: /images
-site_url: https://你的域名.pages.dev
+site_url: https://hargo.pages.dev
 
 publish_mode: editorial_workflow
 
