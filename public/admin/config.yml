@@ -1,0 +1,38 @@
+backend:
+  name: github
+  repo: xiaoz/hargo
+  branch: main
+  base_url: "https://hargo.pages.dev/api"
+  auth_endpoint: "/auth"
+
+media_folder: static/images
+public_folder: /images
+site_url: https://hargo.pages.dev
+
+publish_mode: editorial_workflow
+
+collections:
+  - name: products
+    label: 商品管理
+    folder: content/products
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "商品名称", name: "title", widget: "string" }
+      - { label: "商品ID(SKU)唯一", name: "product_id", widget: "string" }
+      - { label: "基础价格", name: "price", widget: "number", value_type: "float" }
+      - { label: "商品图片", name: "image", widget: "image" }
+      - { label: "商品分类", name: "category", widget: "string" }
+      - { label: "商品简介", name: "description", widget: "text" }
+      - { label: "上架状态", name: "draft", widget: "boolean", default: false }
+
+      # ========= 多规格支持（Snipcart 原生支持）=========
+      - label: "商品规格（颜色/尺码等）"
+        name: "variants"
+        widget: "list"
+        fields:
+          - { label: "规格名称", name: "name", widget: "string" }
+          - { label: "规格价格", name: "price", widget: "number", value_type: "float" }
+          - { label: "库存", name: "stock", widget: "number", default: 100 }
+
+      - { label: "商品详情", name: "body", widget: "markdown" }
