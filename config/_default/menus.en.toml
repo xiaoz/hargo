@@ -6,7 +6,7 @@ URL = "products/"
 weight = 1
 
 [[main]]
-name = "Blog"
+name = "Blog123"
 URL = "blog/"
 weight = 2
 

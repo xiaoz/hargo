@@ -1,0 +1,36 @@
+backend:
+  name: git-gateway # 推荐：不用Github账号也能登录后台
+  repo: https://github.com/xiaoz/hargo.git
+  branch: main # 改成master如果你的主分支是master
+media_folder: "static/uploads" # 图片上传目录（和Forsiy、Snipcart路径统一）
+public_folder: "/uploads"
+site_url: https://hargo.chinalifetravel.com
+publish_mode: editorial_workflow # 草稿→发布流程
+
+# ==========商品集合【content/products，适配Snipcart】==========
+collections:
+  - name: products
+    label: 商品管理
+    folder: content/products
+    create: true # 允许新建商品
+    slug: "{{slug}}" # md文件名
+    fields:
+      - {label: "商品名称", name: title, widget: string}
+      - {label: "SKU编码(Snipcart必填唯一)", name: sku, widget: string}
+      - {label: "商品售价", name: price, widget: number, value_type: float}
+      - {label: "商品主图", name: image, widget: image}
+      - {label: "商品分类", name: category, widget: string}
+      - {label: "库存数量", name: stock, widget: number, default: 99}
+      - {label: "商品简介", name: description, widget: text}
+      - {label: "是否下架(草稿)", name: draft, widget: boolean, default: false}
+      - {label: "商品详情内容", name: body, widget: markdown}
+
+  # 可选：文章页面管理
+  - name: posts
+    label: 文章
+    folder: content/blog
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label:标题,name:title,widget:string}
+      - {label:正文,name:body,widget:markdown}
