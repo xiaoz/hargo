@@ -2,10 +2,56 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>商品管理后台</title>
+  <title>Decap CMS 管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
+
+<!-- Decap CMS 核心 -->
+<script src="https://unpkg.com/decap-cms@^3.3.0/dist/decap-cms.js"></script>
+
+<!-- ========== 自动读取 access_token + 自动登录 ========== -->
+<script>
+// 从 URL 读取 token（支持 ?access_token 或 #access_token）
+function getAndStoreToken() {
+  let token = null;
+
+  // 1. 从 hash 读取 (#access_token=xxx)
+  if (window.location.hash.includes('access_token=')) {
+    token = window.location.hash.split('access_token=')[1];
+  }
+
+  // 2. 从 query 读取 (?access_token=xxx)
+  else if (window.location.search.includes('access_token=')) {
+    const params = new URLSearchParams(window.location.search);
+    token = params.get('access_token');
+  }
+
+  // 如果拿到 token → 存入 localStorage
+  if (token) {
+    window.localStorage.setItem('access_token', token);
+
+    // 清掉 URL 里的 token，安全美观
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// 页面加载时立即执行
+getAndStoreToken();
+
+// 初始化 CMS
+window.CMS.init({
+  config: {
+    backend: {
+      name: "github",
+      repo: "xiaoz/hargo",
+      branch: "main",
+      base_url: "https://hargo.pages.dev/api",
+      auth_endpoint: "/auth"
+    }
+  }
+});
+</script>
+
 </body>
 </html>
