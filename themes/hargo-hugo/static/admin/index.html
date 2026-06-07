@@ -59,11 +59,13 @@
         expires_at: Date.now() + 8 * 3600 * 1000 // 8小时后过期
       };
 
+      console.log(auth);
       // 3. 写入 localStorage（必须是这个 key）
       localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
       // 兼容旧版
       localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
 
+      console.log(123);
       // 4. 清空 hash，刷新页面，让 Decap 重新初始化
       window.location.href = window.location.pathname;
     })();
