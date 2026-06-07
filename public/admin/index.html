@@ -3,45 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex" />
   <title>Admin</title>
-  <!-- 让 Decap 先找 config.yml -->
   <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url" />
 </head>
 <body>
-  <!-- 1. 先关自动初始化 -->
-  <script>
-    window.CMS_MANUAL_INIT = true;
-  </script>
-
-  <!-- 2. 加载 Decap（必须在手动 init 之前） -->
-  <!-- <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js"></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.3.0/dist/decap-cms.min.js"></script> -->
-
-  <script src="./decap-cms.js"></script>
-  <!-- 3. 捕获 token → 写进 localStorage → 再初始化 -->
-  <script>
-  (function () {
-    // 捕获 #access_token=...
-    const hash = window.location.hash;
-    if (hash.startsWith('#/access_token=')) {
-      const token = hash.replace('#/access_token=', '');
-      if (token && token.startsWith('gho_')) {
-        const auth = {
-          token: token,
-          expires_at: Date.now() + 8 * 3600 * 1000
-        };
-        localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
-        localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
-        // 清掉 hash，避免循环
-        history.replaceState({}, document.title, location.pathname);
-      }
-    }
-
-    // 4. 关键：token 写好后，再 init
-    window.CMS.init();
-  })();
-  </script>
+  <!-- 官方自动初始化，不写任何手动代码 -->
+  <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js"></script>
 </body>
 </html>
