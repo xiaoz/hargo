@@ -1,31 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>商品管理后台</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <title>Admin</title>
+  <link href="/admin/config.yml" rel="cms-config-url" />
 </head>
 <body>
-
-
-   <!-- 1. 先修复 URL 里的斜杠问题 -->
-   <script>
+  <script>
+    // 页面一加载，立刻检查 hash 里的 token
     (function () {
-      // 处理 #/access_token= 这种情况
-      if (location.hash.startsWith('#/access_token=')) {
-        const newHash = location.hash.replace('#/access_token=', '#access_token=');
-        // 替换 URL，不让浏览器加斜杠
-        history.replaceState(null, document.title, location.pathname + newHash);
+      const hash = location.hash;
+      let token = null;
+
+      // 匹配两种格式：#access_token= 或 #/access_token=
+      if (hash.startsWith('#access_token=')) {
+        token = hash.replace('#access_token=', '');
+      } else if (hash.startsWith('#/access_token=')) {
+        token = hash.replace('#/access_token=', '');
+      }
+
+      if (token && token.startsWith('gho_')) {
+        // 构造 Decap 能识别的格式
+        const authData = {
+          token: token,
+          expires_at: Date.now() + 8 * 3600 * 1000
+        };
+        // 写入 localStorage
+        localStorage.setItem('decap-cms-auth', JSON.stringify(authData));
+        localStorage.setItem('netlify-cms-auth', JSON.stringify(authData));
+        // 强制刷新一次页面，让 Decap 正常加载
+        location.href = location.pathname;
       }
     })();
   </script>
 
-
-
-  <script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
-
-
-
-  
+  <!-- 再加载 Decap CMS -->
+  <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.min.js"></script>
 </body>
 </html>
