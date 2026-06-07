@@ -6,39 +6,52 @@
   <link href="/admin/config.yml" rel="cms-config-url" />
 </head>
 <body>
-  <script>
-    // 页面一加载，立刻检查 hash 里的 token
-    (function () {
-      const hash = location.hash;
-      let token = null;
-      console.log(hash);
-      // 匹配两种格式：#access_token= 或 #/access_token=
-      if (hash.startsWith('#access_token=')) {
-        token = hash.replace('#access_token=', '');
-      } else if (hash.startsWith('#/access_token=')) {
-        token = hash.replace('#/access_token=', '');
 
-        console.log(token);
-      }
+<!-- 1. 先读取并写入 token -->
+<script>
+(function () {
+  const hash = location.hash;
+  let token = null;
 
-      if (token && token.startsWith('gho_')) {
-        // 构造 Decap 能识别的格式
-        const authData = {
-          token: token,
-          expires_at: Date.now() + 8 * 3600 * 1000
-        };
-        // 写入 localStorage
-        localStorage.setItem('decap-cms-auth', JSON.stringify(authData));
-        localStorage.setItem('netlify-cms-auth', JSON.stringify(authData));
-        // 强制刷新一次页面，让 Decap 正常加载
+  // 读取 #/access_token=
+  if (hash.startsWith('#/access_token=')) {
+    token = hash.replace('#/access_token=', '');
+  }
+  // 读取 #access_token=
+  else if (hash.startsWith('#access_token=')) {
+    token = hash.replace('#access_token=', '');
+  }
 
-        console.log(location.pathname);
-        // location.href = location.pathname;
-      }
-    })();
-  </script>
+  // 如果有 token，强制写入并刷新
+  if (token && token.startsWith('gho_')) {
+    const auth = {
+      token: token,
+      expires_at: Date.now() + 3600 * 1000 * 8
+    };
+    localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
+    localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
 
-  <!-- 再加载 Decap CMS -->
-  <script src="./decap-cms.js"></script>
+    // 强制刷新，让 Decap 从头加载
+    location.replace(location.pathname);
+    return;
+  }
+})();
+</script>
+
+<!-- 2. 加载 Decap -->
+<script src="./decap-cms.js"></script>
+
+<!-- 3. 强制触发登录检查（核心！能让 Decap 发起 /user 请求） -->
+<script>
+setTimeout(() => {
+  const auth = localStorage.getItem('decap-cms-auth');
+  if (auth && window.CMS) {
+    console.log('✅ 强制重新认证');
+    // 手动调用 Decap 内部认证逻辑
+    window.CMS.store.dispatch({ type: 'AUTH_CHECK' });
+  }
+}, 800);
+</script>
+
 </body>
 </html>
