@@ -6,6 +6,54 @@
   <link href="/admin/config.yml" rel="cms-config-url" />
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js"></script>
+
+<!-- 1. 先读取并写入 token -->
+<script>
+<!-- 1. 先处理 #/access_token 并写入 localStorage -->
+(function () {
+  const hash = location.hash;
+  console.log('hash:', hash);
+
+  let token = null;
+  // 匹配你现在的格式：#/access_token=gho_...
+  if (hash.startsWith('#access_token=')) {
+    token = hash.slice('#access_token='.length);
+  }
+
+  if (token && token.startsWith('gho_')) {
+    // 写入 Decap 识别的 key
+    const auth = {
+      token: token,
+      expires_at: Date.now() + 8 * 3600 * 1000
+    };
+    localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
+    localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
+    console.log('✅ token 已写入 localStorage');
+
+    // 去掉 hash，干净刷新，让 Decap 正常初始化
+    location.replace(location.pathname);
+    return;
+  }
+})();
+</script>
+
+<!-- 2. 加载 Decap -->
+<script src="./decap-cms.js"></script>
+
+<!-- 3. 强制触发登录检查（核心！能让 Decap 发起 /user 请求） -->
+<script>
+setTimeout(() => {
+  const auth = localStorage.getItem('decap-cms-auth');
+  if (auth && window.CMS) {
+    console.log('✅ 强制重新认证');
+
+    console.log(window.CMS);
+
+    // 手动调用 Decap 内部认证逻辑
+    // window.CMS.store.dispatch({ type: 'AUTH_CHECK' });
+  }
+}, 800);
+</script>
+
 </body>
 </html>
