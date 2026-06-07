@@ -2,31 +2,38 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Decap CMS 管理后台</title>
+  <title>Decap CMS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
+<script src="https://unpkg.com/decap-cms@3.2.0/dist/decap-cms.js"></script>
 
-<!-- Decap CMS 会自动初始化，不要写 CMS.init()！ -->
-<script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
-
-<!-- 登录逻辑：读 token、存 localStorage、清 URL -->
 <script>
 (function () {
   let token = null;
 
-  // 1. #access_token=xxx
+  // 1. #access_token=...
   if (location.hash.startsWith('#access_token=')) {
     token = location.hash.slice('#access_token='.length);
   }
+  // 2. ?access_token=...
+  if (!token) {
+    const params = new URLSearchParams(location.search);
+    token = params.get('access_token');
+  }
 
-  // 2. ?access_token=xxx
-  const params = new URLSearchParams(location.search);
-  if (!token) token = params.get('access_token');
-
-  // 存到 localStorage，清 URL
   if (token) {
-    localStorage.setItem('access_token', token);
+    // Decap 真正识别的格式
+    const authData = {
+      token: token,
+      // 随便写个过期时间，重点是结构对
+      expires_at: Date.now() + 3600 * 1000
+    };
+    // 存到 Decap 认识的 key
+    localStorage.setItem('decap-cms-auth', JSON.stringify(authData));
+    localStorage.setItem('netlify-cms-auth', JSON.stringify(authData));
+
+    // 清掉 URL 中的 token
     history.replaceState({}, document.title, location.pathname);
   }
 })();
