@@ -9,29 +9,28 @@
 
 <!-- 1. 先读取并写入 token -->
 <script>
+<!-- 1. 先处理 #/access_token 并写入 localStorage -->
 (function () {
   const hash = location.hash;
+  console.log('hash:', hash);
+
   let token = null;
-
-  // 读取 #/access_token=
+  // 匹配你现在的格式：#/access_token=gho_...
   if (hash.startsWith('#/access_token=')) {
-    token = hash.replace('#/access_token=', '');
-  }
-  // 读取 #access_token=
-  else if (hash.startsWith('#access_token=')) {
-    token = hash.replace('#access_token=', '');
+    token = hash.slice('#/access_token='.length);
   }
 
-  // 如果有 token，强制写入并刷新
   if (token && token.startsWith('gho_')) {
+    // 写入 Decap 识别的 key
     const auth = {
       token: token,
-      expires_at: Date.now() + 3600 * 1000 * 8
+      expires_at: Date.now() + 8 * 3600 * 1000
     };
     localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
     localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
+    console.log('✅ token 已写入 localStorage');
 
-    // 强制刷新，让 Decap 从头加载
+    // 去掉 hash，干净刷新，让 Decap 正常初始化
     location.replace(location.pathname);
     return;
   }
@@ -47,8 +46,11 @@ setTimeout(() => {
   const auth = localStorage.getItem('decap-cms-auth');
   if (auth && window.CMS) {
     console.log('✅ 强制重新认证');
+
+    console.log(window.CMS);
+
     // 手动调用 Decap 内部认证逻辑
-    window.CMS.store.dispatch({ type: 'AUTH_CHECK' });
+    // window.CMS.store.dispatch({ type: 'AUTH_CHECK' });
   }
 }, 800);
 </script>
