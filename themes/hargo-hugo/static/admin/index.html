@@ -11,12 +11,14 @@
     (function () {
       const hash = location.hash;
       let token = null;
-
+      console.log(hash);
       // 匹配两种格式：#access_token= 或 #/access_token=
       if (hash.startsWith('#access_token=')) {
         token = hash.replace('#access_token=', '');
       } else if (hash.startsWith('#/access_token=')) {
         token = hash.replace('#/access_token=', '');
+
+        console.log(token);
       }
 
       if (token && token.startsWith('gho_')) {
@@ -29,6 +31,8 @@
         localStorage.setItem('decap-cms-auth', JSON.stringify(authData));
         localStorage.setItem('netlify-cms-auth', JSON.stringify(authData));
         // 强制刷新一次页面，让 Decap 正常加载
+
+        console.log(location.pathname);
         location.href = location.pathname;
       }
     })();
