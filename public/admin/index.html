@@ -8,7 +8,7 @@
 <body>
 <!-- <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js?t=12312"></script> -->
 
-<script>
+<!-- <script>
 (function () {
   let token = null;
 
@@ -37,9 +37,32 @@
     history.replaceState({}, document.title, location.pathname);
   }
 })();
-</script>
+</script> -->
 
-<script src="./decap-cms.js"></script>
+<!-- <script src="./decap-cms.js"></script> -->
+ <!-- 使用稳定的 jsdelivr CDN -->
+ <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.3.0/dist/decap-cms.min.js"></script>
 
+ <script>
+   (function () {
+     // 从 URL hash 读取 token
+     const hash = window.location.hash;
+     if (hash.startsWith('#access_token=')) {
+       const token = hash.replace('#access_token=', '');
+       if (token) {
+         // 构造 Decap 要求的格式
+         const authData = {
+           token: token,
+           // 设置一个未来的过期时间
+           expires_at: Date.now() + 3600 * 1000
+         };
+         // 存入 Decap 识别的 key
+         localStorage.setItem('decap-cms-auth', JSON.stringify(authData));
+         // 清掉 URL 中的 token，刷新页面让 Decap 自动读取
+         window.location.href = window.location.pathname;
+       }
+     }
+   })();
+ </script>
 </body>
 </html>
