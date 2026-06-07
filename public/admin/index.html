@@ -6,15 +6,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
+
+
+   <!-- 1. 先修复 URL 里的斜杠问题 -->
+   <script>
+    (function () {
+      // 处理 #/access_token= 这种情况
+      if (location.hash.startsWith('#/access_token=')) {
+        const newHash = location.hash.replace('#/access_token=', '#access_token=');
+        // 替换 URL，不让浏览器加斜杠
+        history.replaceState(null, document.title, location.pathname + newHash);
+      }
+    })();
+  </script>
+
+
+
   <script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
 
 
 
-  <script>
-    // 自动修复 #/access_token → #access_token
-    if (location.hash.includes('#/access_token')) {
-      location.hash = location.hash.replace('#/access_token', '#access_token');
-    }
-  </script>
+  
 </body>
 </html>
