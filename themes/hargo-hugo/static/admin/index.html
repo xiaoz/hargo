@@ -57,9 +57,9 @@ console.log(1);
       console.log(hash);
 
 
-      if (!hash.startsWith('#access_token=')) return;
+      if (!hash.startsWith('#/access_token=')) return;
 
-      const token = hash.replace('#access_token=', '');
+      const token = hash.replace('#/access_token=', '');
       if (!token || !token.startsWith('gho_')) return;
 
       // 2. 构造 Decap 3.x 必须的格式
