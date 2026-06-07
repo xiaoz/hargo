@@ -38,7 +38,9 @@
   }
 })();
 </script> -->
-
+<script>
+  window.CMS_MANUAL_INIT = true;
+</script>
 <!-- <script src="./decap-cms.js"></script> -->
  <!-- 使用稳定的 jsdelivr CDN -->
  <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.3.0/dist/decap-cms.min.js"></script>
@@ -77,6 +79,25 @@ console.log(1);
       console.log(123);
       // 4. 清空 hash，刷新页面，让 Decap 重新初始化
       window.location.href = window.location.pathname;
+
+
+       // 4. 关键：不管有没有 token，都在这里手动初始化 CMS
+      // 此时 token 已经写入，CMS 一定会读到
+      window.CMS.init({
+        config: {
+          backend: {
+            name: "github",
+            repo: "xiaoz/hargo",
+            branch: "main",
+            base_url: "https://hargo.pages.dev",
+            auth_endpoint: "/api/auth"
+          },
+          media_folder: "static/images",
+          public_folder: "/images",
+          site_url: "https://hargo.pages.dev",
+          publish_mode: "editorial_workflow"
+        }
+      });
     })();
  </script>
 </body>
