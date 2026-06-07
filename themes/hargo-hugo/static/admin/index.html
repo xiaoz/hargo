@@ -7,50 +7,29 @@
 </head>
 <body>
 
-<!-- Decap CMS 核心 -->
+<!-- Decap CMS 会自动初始化，不要写 CMS.init()！ -->
 <script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
 
-<!-- ========== 自动读取 access_token + 自动登录 ========== -->
+<!-- 登录逻辑：读 token、存 localStorage、清 URL -->
 <script>
-// 从 URL 读取 token（支持 ?access_token 或 #access_token）
-function getAndStoreToken() {
+(function () {
   let token = null;
 
-  // 1. 从 hash 读取 (#access_token=xxx)
-  if (window.location.hash.includes('access_token=')) {
-    token = window.location.hash.split('access_token=')[1];
+  // 1. #access_token=xxx
+  if (location.hash.startsWith('#access_token=')) {
+    token = location.hash.slice('#access_token='.length);
   }
 
-  // 2. 从 query 读取 (?access_token=xxx)
-  else if (window.location.search.includes('access_token=')) {
-    const params = new URLSearchParams(window.location.search);
-    token = params.get('access_token');
-  }
+  // 2. ?access_token=xxx
+  const params = new URLSearchParams(location.search);
+  if (!token) token = params.get('access_token');
 
-  // 如果拿到 token → 存入 localStorage
+  // 存到 localStorage，清 URL
   if (token) {
-    window.localStorage.setItem('access_token', token);
-
-    // 清掉 URL 里的 token，安全美观
-    window.history.replaceState({}, document.title, window.location.pathname);
+    localStorage.setItem('access_token', token);
+    history.replaceState({}, document.title, location.pathname);
   }
-}
-
-// 页面加载时立即执行
-getAndStoreToken();
-
-// 初始化 CMS
-window.CMS.init({
-  config: {
-    backend: {
-      name: "github",
-      repo: "xiaoz/hargo",
-      branch: "main",
-      base_url: "https://hargo.pages.dev/api",
-      auth_endpoint: "/auth"
-    }
-  }
-});
+})();
 </script>
 
 </body>
