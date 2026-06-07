@@ -2,103 +2,43 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Decap CMS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Admin</title>
+  <!-- 让 Decap 先找 config.yml -->
+  <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url" />
 </head>
 <body>
-<!-- <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js?t=12312"></script> -->
+  <!-- 1. 先关自动初始化 -->
+  <script>
+    window.CMS_MANUAL_INIT = true;
+  </script>
 
-<!-- <script>
-(function () {
-  let token = null;
+  <!-- 2. 加载 Decap（必须在手动 init 之前） -->
+  <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.min.js"></script>
 
-  // 1. #access_token=...
-  if (location.hash.startsWith('#access_token=')) {
-    token = location.hash.slice('#access_token='.length);
-  }
-  // 2. ?access_token=...
-  if (!token) {
-    const params = new URLSearchParams(location.search);
-    token = params.get('access_token');
-  }
-
-  if (token) {
-    // Decap 真正识别的格式
-    const authData = {
-      token: token,
-      // 随便写个过期时间，重点是结构对
-      expires_at: Date.now() + 3600 * 1000
-    };
-    // 存到 Decap 认识的 key
-    localStorage.setItem('decap-cms-auth', JSON.stringify(authData));
-    localStorage.setItem('netlify-cms-auth', JSON.stringify(authData));
-
-    // 清掉 URL 中的 token
-    history.replaceState({}, document.title, location.pathname);
-  }
-})();
-</script> -->
-<script>
-  window.CMS_MANUAL_INIT = true;
-</script>
-<!-- <script src="./decap-cms.js"></script> -->
- <!-- 使用稳定的 jsdelivr CDN -->
- <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.3.0/dist/decap-cms.min.js"></script>
-
- <script>
-
-console.log(1);
-
-
-  // 只在页面加载时执行一次
-  (function() {
-      // 1. 从 URL hash 拿到 access_token
-      const hash = window.location.hash;
-
-
-      console.log(hash);
-
-
-      if (!hash.startsWith('#/access_token=')) return;
-
+  <!-- 3. 捕获 token → 写进 localStorage → 再初始化 -->
+  <script>
+  (function () {
+    // 捕获 #access_token=...
+    const hash = window.location.hash;
+    if (hash.startsWith('#/access_token=')) {
       const token = hash.replace('#/access_token=', '');
-      if (!token || !token.startsWith('gho_')) return;
+      if (token && token.startsWith('gho_')) {
+        const auth = {
+          token: token,
+          expires_at: Date.now() + 8 * 3600 * 1000
+        };
+        localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
+        localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
+        // 清掉 hash，避免循环
+        history.replaceState({}, document.title, location.pathname);
+      }
+    }
 
-      // 2. 构造 Decap 3.x 必须的格式
-      const auth = {
-        token: token,
-        expires_at: Date.now() + 8 * 3600 * 1000 // 8小时后过期
-      };
-
-      console.log(auth);
-      // 3. 写入 localStorage（必须是这个 key）
-      localStorage.setItem('decap-cms-auth', JSON.stringify(auth));
-      // 兼容旧版
-      localStorage.setItem('netlify-cms-auth', JSON.stringify(auth));
-
-      console.log(123);
-      // 4. 清空 hash，刷新页面，让 Decap 重新初始化
-      window.location.href = window.location.pathname;
-
-
-       // 4. 关键：不管有没有 token，都在这里手动初始化 CMS
-      // 此时 token 已经写入，CMS 一定会读到
-      window.CMS.init({
-        config: {
-          backend: {
-            name: "github",
-            repo: "xiaoz/hargo",
-            branch: "main",
-            base_url: "https://hargo.pages.dev",
-            auth_endpoint: "/api/auth"
-          },
-          media_folder: "static/images",
-          public_folder: "/images",
-          site_url: "https://hargo.pages.dev",
-          publish_mode: "editorial_workflow"
-        }
-      });
-    })();
- </script>
+    // 4. 关键：token 写好后，再 init
+    window.CMS.init();
+  })();
+  </script>
 </body>
 </html>
