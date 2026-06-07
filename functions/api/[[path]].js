@@ -31,23 +31,8 @@ export async function onRequest({ request, env }) {
       const tokenData = await tokenRes.json();
       if (tokenData.access_token) {
 
-        return new Response(`
-            <!DOCTYPE html>
-            <html>
-            <body>
-            <script>
-              // 把 token 发给 opener（Decap 页面）
-              window.opener.postMessage({
-                type: 'decap-cms-auth',
-                token: '${tokenData.access_token}'
-              }, '*');
-              window.close();
-            </script>
-            </body>
-            </html>
-            `, {
-              headers: { 'Content-Type': 'text/html' }
-            });
+    
+            return Response.redirect(`${SITE}/admin/#access_token=${token}`, 302);
         // return Response.redirect(`${SITE}/admin#access_token=${tokenData.access_token}`, 302);
       }
       return new Response("获取token失败", { status: 400 });
