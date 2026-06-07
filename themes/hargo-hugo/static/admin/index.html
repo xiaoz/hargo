@@ -16,8 +16,8 @@
 
   let token = null;
   // 匹配你现在的格式：#/access_token=gho_...
-  if (hash.startsWith('#/access_token=')) {
-    token = hash.slice('#/access_token='.length);
+  if (hash.startsWith('#access_token=')) {
+    token = hash.slice('#access_token='.length);
   }
 
   if (token && token.startsWith('gho_')) {
