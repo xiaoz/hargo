@@ -2,56 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8" />
+  <title>商品管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex" />
-  <title>Admin</title>
-  <!-- 让 Decap 先找 config.yml -->
-  <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url" />
 </head>
 <body>
-  <!-- 1. 先关自动初始化 -->
-  <script>
-    window.CMS_MANUAL_INIT = true;
-  </script>
-
-  <!-- 2. 加载 Decap（必须在手动 init 之前） -->
-  <!-- <script src="https://unpkg.com/decap-cms@3.3.0/dist/decap-cms.js"></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.3.0/dist/decap-cms.min.js"></script> -->
-
-  <script src="./decap-cms.js"></script>
-  <!-- 3. 捕获 token → 写进 localStorage → 再初始化 -->
-
-    <script>
-    (function () {
-      const hash = location.hash;
-      if (hash.startsWith('#/access_token=')) {
-        const token = hash.replace('#/access_token=', '');
-        localStorage.setItem('decap-cms-auth', JSON.stringify({
-          token,
-          expires_at: Date.now() + 8 * 3600 * 1000
-        }));
-        history.replaceState({}, document.title, location.pathname);
-      }
-    
-      window.CMS.init();
-    
-      // 强制补 /user 请求（关键）
-      const auth = JSON.parse(localStorage.getItem('decap-cms-auth') || '{}');
-      if (auth.token) {
-        fetch('https://api.github.com/user', {
-          headers: { Authorization: 'token ' + auth.token }
-        })
-        .then(r => r.json())
-        .then(user => {
-          // 手动把用户信息塞给 Decap
-          window.CMS.store.dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: { user, token: auth.token }
-          });
-        });
-      }
-    })();
-    </script>
+  <script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
 </body>
 </html>
