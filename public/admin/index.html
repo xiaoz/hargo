@@ -7,5 +7,14 @@
 </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.2.0/dist/decap-cms.js"></script>
+
+
+
+  <script>
+    // 自动修复 #/access_token → #access_token
+    if (location.hash.includes('#/access_token')) {
+      location.hash = location.hash.replace('#/access_token', '#access_token');
+    }
+  </script>
 </body>
 </html>

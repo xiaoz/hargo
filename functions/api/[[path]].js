@@ -32,7 +32,7 @@ export async function onRequest({ request, env }) {
       if (tokenData.access_token) {
 
     
-            return Response.redirect(`${SITE}/admin/#access_token=${token}`, 302);
+         return Response.redirect(`${SITE}/admin/#access_token=${tokenData.access_token}`, 302);
         // return Response.redirect(`${SITE}/admin#access_token=${tokenData.access_token}`, 302);
       }
       return new Response("获取token失败", { status: 400 });
