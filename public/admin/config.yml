@@ -1,8 +1,9 @@
 backend:
   name: github
+  repo: xiaoz/hargo
+  branch: main
   auth_type: pkce
   app_id: Ov23liSZ6MfZzcM2B5R6
-
 
 media_folder: static/images
 public_folder: /images
