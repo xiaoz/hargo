@@ -2,31 +2,28 @@
 
 {{ partial "page-title.html" . }}
 
-<section class="section pt-0">
+<section class="section products">
   <div class="container">
     <div class="row">
-      {{ range .Data.Pages }}
-      <div class="col-lg-4 col-sm-6 mb-4">
-        <div class="card border-0 text-center">
-          <a href="{{ .Permalink }}">
-            {{ range first 1 .Params.Images }}
-            {{ partial "image.html" (dict "Src" .image "Alt" .Title "Class" "card-img-top") }}
+      {{ range .Pages }}
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card product-card h-100 border-0 rounded shadow-sm">
+          <div class="card-img-top position-relative overflow-hidden" style="height:220px;">
+            {{ with .Params.images }}
+              {{ $img := index . 0 }}
+              <img src="{{ $img.image | absURL }}" class="img-fluid h-100 w-100 object-cover" >
+            {{ else }}
+              <img src="/images/default-product.png" class="img-fluid h-100 w-100 object-cover" alt="product image">
             {{ end }}
-          </a>
-          <div class="card-body">
-            <a href="{{ .Permalink }}" class="h4">{{ .Title }}</a>
-            <p>{{ .Params.Description }}</p>
-            <div class="mb-4">
-              {{ if .Params.PriceBefore }}
-              <s>{{ site.Params.currencySymbol }}{{ .Params.PriceBefore }}</s>
-              {{ end }}
-              <span class="lead text-primary">{{ site.Params.currencySymbol }}{{ .Params.Price }}</span>
+          </div>
+
+          <div class="card-body p-3">
+            <h5 class="mb-2"><a href="{{ .Permalink }}" class="text-dark">{{ .Title }}</a></h5>
+            <p class="text-muted small mb-2">{{ .Params.description | truncate 40 }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-primary font-weight-bold">{{ site.Params.currencySymbol }}{{ .Params.price }}</span>
+              <a href="{{ .Permalink }}" class="btn btn-sm btn-primary">View Details</a>
             </div>
-            <button class="snipcart-add-item btn btn-sm btn-outline-primary" data-item-id="{{ .Params.ProductID }}"
-              data-item-name="{{ .Title }}" {{ range first 1 .Params.Images }} data-item-image="{{ .image | absURL }}"
-              {{ end }} data-item-price="{{ .Params.Price }}" data-item-url="{{ .Permalink }}" data-item-description="{{ .Description }}">
-              Add to cart
-            </button>
           </div>
         </div>
       </div>
