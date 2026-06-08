@@ -2,7 +2,6 @@
 title: Taba Creamrettset
 product_id: dsfds232132132
 price: 20
-image: /images/915e5b06f10e4000a342a6a4c734258f.png
 category: '123123'
 description: For Glowing Skin
 draft: false
