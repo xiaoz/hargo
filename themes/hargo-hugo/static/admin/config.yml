@@ -22,7 +22,11 @@ collections:
       - { label: "商品名称", name: "title", widget: "string" }
       - { label: "商品ID(SKU)", name: "product_id", widget: "string" }
       - { label: "基础价格", name: "price", widget: "number", value_type: "float" }
-      - { label: "商品图片", name: "images", widget: "list", fields: { name: image, widget: image } }
+      - label: "商品图片"
+        name: "images"
+        widget: "list" 
+        fields: 
+          - { name: image, widget: image } 
       - { label: "商品分类", name: "category", widget: "string" }
       - { label: "商品简介", name: "description", widget: "text" }
       - { label: "上架状态", name: "draft", widget: "boolean", default: false }
