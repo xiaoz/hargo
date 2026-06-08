@@ -1,42 +1,48 @@
-export async function onRequest({ request, env }) {
-    const { pathname } = new URL(request.url);
-    const route = pathname.replace("/api/", "");
-    const SITE = "https://hargo.pages.dev";
-    const CLIENT_ID = env.GITHUB_CLIENT_ID;
-    const CLIENT_SECRET = env.GITHUB_CLIENT_SECRET;
+export default async function onRequest({ request, env }) {
+    const url = new URL(request.url);
+    const GITHUB_CLIENT_ID = env.GITHUB_CLIENT_ID;
+    const GITHUB_CLIENT_SECRET = env.GITHUB_CLIENT_SECRET;
+    const REDIRECT_URI = "https://hargo.pages.dev/api/callback";
   
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-      return new Response("缺少OAuth密钥", { status: 500 });
+    // 登录跳转 GitHub
+    if (url.pathname === "/api/auth") {
+      const authUrl = new URL("https://github.com/login/oauth/authorize");
+      authUrl.searchParams.set("client_id", GITHUB_CLIENT_ID);
+      authUrl.searchParams.set("redirect_uri", REDIRECT_URI);
+      authUrl.searchParams.set("scope", "repo");
+      authUrl.searchParams.set("response_type", "code");
+      return Response.redirect(authUrl.toString(), 302);
     }
   
-    // 处理 /api/auth 跳转
-    if (route === "auth") {
-      const oauthUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${SITE}/api/callback&scope=repo,user`;
-      return Response.redirect(oauthUrl, 302);
-    }
+    // 回调交换 token
+    if (url.pathname === "/api/callback") {
+      const code = url.searchParams.get("code");
+      if (!code) return new Response("Missing code", { status: 400 });
   
-    // 处理 /api/callback 回调
-    if (route === "callback") {
-      const code = new URL(request.url).searchParams.get("code");
       const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
+          client_id: GITHUB_CLIENT_ID,
+          client_secret: GITHUB_CLIENT_SECRET,
           code,
-          redirect_uri: `${SITE}/api/callback`
-        })
+          redirect_uri: REDIRECT_URI,
+        }),
       });
+  
       const tokenData = await tokenRes.json();
-      if (tokenData.access_token) {
-
-    
-         return Response.redirect(`${SITE}/admin/#access_token=${tokenData.access_token}`, 302);
-        // return Response.redirect(`${SITE}/admin#access_token=${tokenData.access_token}`, 302);
-      }
-      return new Response("获取token失败", { status: 400 });
+      const accessToken = tokenData.access_token;
+      if (!accessToken) return new Response("Failed to get token", { status: 400 });
+  
+      // 回 Decap 并带上 token
+      return Response.redirect(`/admin#access_token=${accessToken}`, 302);
     }
   
-    return new Response("Not Found", { status: 404 });
+    // 转发 Git 请求到 GitHub API
+    const apiPath = url.pathname.replace("/api", "");
+    return fetch(`https://api.github.com${apiPath}`, {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+    });
   }
