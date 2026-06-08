@@ -1,11 +1,7 @@
 backend:
-  name: git-gateway
+  name: github
   auth_type: pkce
   app_id: Ov23liSZ6MfZzcM2B5R6
-  base_url: https://github.com
-  auth_endpoint: login/oauth/authorize
-  token_endpoint: login/oauth/access_token
-  gateway_url: https://hargo.pages.dev/api
 
 
 media_folder: static/images
