@@ -8,50 +8,69 @@
       <div class="col-lg-5 mb-4 mb-lg-0">
         <!-- product image slider -->
         <div class="product-slider">
-          {{ range .Params.Images }}
+          {{ range .Params.images }}
           <div data-image="{{ .image | absURL }}">
             {{ partial "image.html" (dict "Src" .image "Alt" "product-img" "Class" "img-fluid w-100") }}
           </div>
           {{ end }}
         </div>
       </div>
+
       <div class="col-lg-5 offset-lg-1">
         <h4 class="font-weight-medium">{{ .Title }}</h4>
-        <!-- rating star -->
-        {{ if site.Params.rating.enable }}
-        <div class="rw-ui-container"></div>
-        {{ end }}
+
         <div class="my-4">
-          {{ if .Params.PriceBefore }}
-          <s>{{ site.Params.currencySymbol }}{{ .Params.PriceBefore }}</s>
-          {{ end }}
-          <span class="lead text-primary font-weight-medium">{{ site.Params.currencySymbol }}{{ .Params.Price }}</span>
+          <span class="lead text-primary font-weight-medium" id="display-price">
+            {{ site.Params.currencySymbol }}{{ .Params.price }}
+          </span>
         </div>
-        <h5>Short Description</h5>
-        <p>{{ .Params.ShortDescription | markdownify }}</p>
-        <button class="snipcart-add-item btn btn-primary" data-item-id="{{ .Params.ProductID }}"
-          data-item-name="{{ .Title }}" {{ range first 1 .Params.Images }} data-item-image="{{ .image | absURL }}"
-          {{ end }} data-item-price="{{ .Params.Price }}" data-item-url="{{ .Permalink }}" data-item-description="{{ .Description }}">
-          Add to cart
+
+        <p>{{ .Params.description | markdownify }}</p>
+
+        <!-- ===================== 规格选择 ===================== -->
+        {{ if .Params.variants }}
+        <div class="mt-3 mb-4">
+          <h5>选择规格</h5>
+          <select id="variant-select" class="form-control mb-2">
+            {{ range .Params.variants }}
+            <option 
+              value="{{ .name }}" 
+              data-price="{{ .price }}"
+              data-stock="{{ .stock }}">
+              {{ .name }} - {{ site.Params.currencySymbol }}{{ .price }} (库存 {{ .stock }})
+            </option>
+            {{ end }}
+          </select>
+        </div>
+        {{ end }}
+
+        <!-- ===================== 加入购物车按钮 ===================== -->
+        <button 
+          id="add-to-cart-btn"
+          class="snipcart-add-item btn btn-primary"
+          data-item-id="{{ .Params.product_id }}"
+          data-item-name="{{ .Title }}"
+          {{ with index .Params.images 0 }}
+          data-item-image="{{ .image | absURL }}"
+          {{ end }}
+          data-item-price="{{ .Params.price }}"
+          data-item-url="{{ .Permalink }}"
+          data-item-description="{{ .Params.description }}">
+          加入购物车
         </button>
       </div>
+
       <div class="col-12 mt-5">
         <ul class="nav nav-tabs border-bottom-0" id="myTab" role="tablist">
           <li class="nav-item mr-3">
-            <a class="nav-link active" id="description-tab" data-toggle="tab" href="#description" role="tab"
-              aria-controls="description" aria-selected="true">Description</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab" aria-controls="reviews"
-              aria-selected="false">Reviews</a>
+            <a class="nav-link active" id="description-tab" data-toggle="tab" href="#description" role="tab">
+              商品详情
+            </a>
           </li>
         </ul>
-        <div class="tab-content" id="myTabContent">
-          <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="description">
             <div class="content">{{ .Content }}</div>
-          </div>
-          <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
-            {{ template "_internal/disqus.html" . }}
           </div>
         </div>
       </div>
@@ -59,6 +78,35 @@
   </div>
 </section>
 
-{{ partial "cta.html" . }}
+<!-- ===================== 规格切换 JS ===================== -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const variantSelect = document.getElementById('variant-select');
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const displayPrice = document.getElementById('display-price');
+  const baseCurrency = '{{ site.Params.currencySymbol }}';
+  const defaultPrice = parseFloat('{{ .Params.price }}');
 
+  if (variantSelect) {
+    // 初始加载触发一次
+    variantSelect.dispatchEvent(new Event('change'));
+
+    // 切换规格时更新价格、按钮数据
+    variantSelect.addEventListener('change', function () {
+      const selectedOption = this.options[this.selectedIndex];
+      const price = selectedOption.dataset.price || defaultPrice;
+      const variantName = selectedOption.value;
+
+      // 更新显示价格
+      displayPrice.innerText = baseCurrency + price;
+
+      // 更新购物车按钮价格 + 规格名称
+      addToCartBtn.dataset.itemPrice = price;
+      addToCartBtn.dataset.itemName = '{{ .Title }} - ' + variantName;
+    });
+  }
+});
+</script>
+
+{{ partial "cta.html" . }}
 {{ end }}
