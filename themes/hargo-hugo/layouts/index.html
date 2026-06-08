@@ -34,7 +34,7 @@
         {{ end }}
       </div>
       <div class="col-lg-7 col-md-6 order-1 order-lg-2">
-        {{ partial "image.html" (dict "Src" .image "Alt" "image" "Class" "img-fluid") }}
+        {{ partial "image.html" (dict "Src" .image "Alt" "banner image" "Class" "img-fluid") }}
       </div>
     </div>
   </div>
@@ -50,7 +50,7 @@
   <div class="container">
     <div class="row justify-content-around align-items-center">
       <div class="col-lg-5 col-md-6">
-        {{ partial "image.html" (dict "Src" .image "Alt" "image" "Class" "img-fluid") }}
+        {{ partial "image.html" (dict "Src" .image "Alt" "about image" "Class" "img-fluid") }}
       </div>
       <div class="col-md-6 col-lg-5">
         <h2>{{ .title | markdownify }}</h2>
@@ -113,7 +113,7 @@
         </ul>
       </div>
       <div class="col-md-6">
-        {{ partial "image.html" (dict "Src" .image "Alt" "image" "Class" "img-fluid") }}
+        {{ partial "image.html" (dict "Src" .image "Alt" "advantage image" "Class" "img-fluid") }}
       </div>
     </div>
   </div>
@@ -170,24 +170,38 @@
       <div class="col-lg-4 col-sm-6 mb-4">
         <div class="card border-0 text-center">
           <a href="{{ .Permalink }}">
-            {{ range first 1 .Params.Images }}
-            {{ partial "image.html" (dict "Src" .image "Alt" .Title  "Class" "card-img-top") }}
+            {{ with .Params.images }}
+              {{ range first 1 . }}
+                {{ partial "image.html" (dict "Src" .image "Alt" $.Title "Class" "card-img-top") }}
+              {{ end }}
             {{ end }}
           </a>
           <div class="card-body">
             <a href="{{ .Permalink }}" class="h4">{{ .Title }}</a>
-            <p>{{ .Params.Description }}</p>
+            <p>{{ .Params.description }}</p>
             <div class="mb-4">
-              {{ if .Params.PriceBefore }}
-              <s>{{ site.Params.currencySymbol }}{{ .Params.PriceBefore }}</s>
+              {{ if .Params.priceBefore }}
+              <s>{{ site.Params.currencySymbol }}{{ .Params.priceBefore }}</s>
               {{ end }}
-              <span class="lead text-primary">{{ site.Params.currencySymbol }}{{ .Params.Price }}</span>
+              <span class="lead text-primary">{{ site.Params.currencySymbol }}{{ .Params.price }}</span>
             </div>
-            <button class="snipcart-add-item btn btn-sm btn-outline-primary" data-item-id="{{ .Params.ProductID }}"
-              data-item-name="{{ .Title }}" {{ range first 1 .Params.Images }} data-item-image="{{ .image | absURL }}"
-              {{ end }} data-item-price="{{ .Params.Price }}" data-item-url="{{ .Permalink }}" data-item-description="{{ .Description }}">
+
+            {{ if and .Params.product_id .Params.price }}
+            <button class="snipcart-add-item btn btn-sm btn-outline-primary"
+              data-item-id="{{ .Params.product_id }}"
+              data-item-name="{{ .Title }}"
+              {{ with .Params.images }}
+                {{ range first 1 . }}
+                  data-item-image="{{ .image | absURL }}"
+                {{ end }}
+              {{ end }}
+              data-item-price="{{ .Params.price }}"
+              data-item-url="{{ .Permalink }}"
+              data-item-description="{{ .Params.description }}">
               Add to cart
             </button>
+            {{ end }}
+
           </div>
         </div>
       </div>
