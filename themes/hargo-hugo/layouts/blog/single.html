@@ -1,0 +1,21 @@
+{{ define "main" }}
+
+{{ partial "page-title.html" . }}
+
+<section class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        {{ if .Params.image }}
+        <img src="{{ .Params.image | absURL }}" alt="{{ .Title }}" class="img-fluid mb-4 rounded">
+        {{ end }}
+        <h2 class="mb-3">{{ .Title }}</h2>
+        <div class="content">{{ .Content }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ partial "cta.html" . }}
+
+{{ end }}

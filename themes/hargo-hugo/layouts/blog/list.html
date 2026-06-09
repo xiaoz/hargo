@@ -1,0 +1,28 @@
+{{ define "main" }}
+
+{{ partial "page-title.html" . }}
+
+<section class="section">
+  <div class="container">
+    <div class="row">
+      {{ range .Pages }}
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+          {{ if .Params.image }}
+          <img src="{{ .Params.image | absURL }}" alt="{{ .Title }}" class="card-img-top">
+          {{ end }}
+          <div class="card-body">
+            <h5 class="card-title"><a href="{{ .Permalink }}" class="text-dark">{{ .Title }}</a></h5>
+            <p class="text-muted small">{{ .Params.description | truncate 60 }}</p>
+            <a href="{{ .Permalink }}" class="btn btn-sm btn-primary">Read More</a>
+          </div>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+</section>
+
+{{ partial "cta.html" . }}
+
+{{ end }}

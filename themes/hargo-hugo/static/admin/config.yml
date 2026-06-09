@@ -38,3 +38,16 @@ collections:
           - { label: "规格价格", name: "price", widget: "number", value_type: "float" }
           - { label: "库存", name: "stock", widget: "number", default: 100 }
       - { label: "商品详情", name: "body", widget: "markdown" }
+      # ===================== 博客文章 =====================
+  - name: blog
+    label: Blog
+    folder: content/blog
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime", default: "{{now}}" }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Image", name: "image", widget: "image", required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
