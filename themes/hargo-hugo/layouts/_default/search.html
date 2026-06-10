@@ -43,8 +43,14 @@
           zero_results: "No products found for [SEARCH_TERM]",
           searching: "Searching...",
           results_count: "[COUNT] results"
+        },
+          // 👇 修正图片URL（防止相对路径）
+        processResult: function (result) {
+        if (result.meta.image && !result.meta.image.startsWith('http')) {
+            result.meta.image = window.location.origin + result.meta.image;
         }
-     
+        return result;
+        }
       });
 
         // 重点：读取 URL ?q=xxx 并自动填入 + 搜索

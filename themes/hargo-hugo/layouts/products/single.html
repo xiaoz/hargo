@@ -62,34 +62,42 @@
         {{ end }}
         <p class="text-muted">{{ .Params.description | markdownify }}</p>
 
-        <!-- Variant Selector -->
+        <!-- 规格选择器 -->
         {{ if .Params.variants }}
         <div class="mb-3">
           <label class="font-weight-bold">Select Variant</label>
           <select id="variant-select" class="form-control">
-            {{ range .Params.variants }}
-            <option value="{{ .name }}" data-price="{{ .price }}">
-              {{ .name }} - {{ site.Params.currencySymbol }}{{ .price }} (Stock: {{ .stock }})
+            {{ range $idx, $v := .Params.variants }}
+            <option 
+              value="{{ $v.name }}" 
+              data-price="{{ $v.price }}"
+              data-variant-id="{{ $.Params.product_id }}-{{ $idx }}"
+            >
+              {{ $v.name }} - {{ site.Params.currencySymbol }}{{ $v.price }} (Stock: {{ $v.stock }})
             </option>
             {{ end }}
           </select>
         </div>
         {{ end }}
-
         <!-- Add to Cart Button -->
+        <!-- Snipcart 加购按钮（原生支持变体，爬虫可校验） -->
         <button
-          id="add-to-cart"
-          class="snipcart-add-item btn btn-primary w-100"
-          data-item-id="{{ .Params.product_id }}"
-          data-item-name="{{ .Title }}"
-          {{ with index .Params.images 0 }}
-          data-item-image="{{ .image | absURL }}"
-          {{ end }}
-          data-item-price="{{ .Params.price }}"
-          data-item-url="{{ .Permalink }}"
-          data-item-description="{{ .Params.description }}">
-          Add to Cart
+        class="snipcart-add-item btn btn-primary w-100"
+        data-item-id="{{ .Params.product_id }}"
+        data-item-name="{{ .Title }}"
+        {{ with index .Params.images 0 }}
+        data-item-image="{{ .image | absURL }}"
+        {{ end }}
+        data-item-price="{{ .Params.price }}"
+        data-item-url="{{ .Permalink | absURL }}"
+        data-item-description="{{ .Params.description }}"
+        {{ if .Params.variants }}
+        data-item-has-variants="true"
+        {{ end }}
+        >
+        Add to Cart
         </button>
+
       </div>
 
       <div class="col-12 mt-5">
@@ -111,23 +119,32 @@
 <!-- Variant Switch JS -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const variant = document.getElementById('variant-select');
-  const addBtn = document.getElementById('add-to-cart');
+  const variantSelect = document.getElementById('variant-select');
+  const addBtn = document.querySelector('.snipcart-add-item');
   const priceDisplay = document.getElementById('product-price');
   const currency = '{{ site.Params.currencySymbol }}';
   const defaultPrice = '{{ .Params.price }}';
 
-  if (variant) {
-    variant.addEventListener('change', function () {
-      const selected = this.options[this.selectedIndex];
-      const newPrice = selected.dataset.price;
-      const variantName = selected.value;
+  if (variantSelect && addBtn) {
+    // 初始化默认选中项
+    const initOpt = variantSelect.options[variantSelect.selectedIndex];
+    priceDisplay.innerText = currency + initOpt.dataset.price;
+    addBtn.dataset.itemPrice = initOpt.dataset.price;
+    addBtn.dataset.itemId = initOpt.dataset.variantId;
+    addBtn.dataset.itemName = '{{ .Title }} - ' + initOpt.value;
 
+    // 切换规格
+    variantSelect.addEventListener('change', function () {
+      const opt = this.options[this.selectedIndex];
+      const newPrice = opt.dataset.price;
+      
+      // 更新页面展示价格
       priceDisplay.innerText = currency + newPrice;
+      // 更新Snipcart 商品ID、价格、名称（变体独立ID）
       addBtn.dataset.itemPrice = newPrice;
-      addBtn.dataset.itemName = '{{ .Title }} - ' + variantName;
+      addBtn.dataset.itemId = opt.dataset.variantId;
+      addBtn.dataset.itemName = '{{ .Title }} - ' + opt.value;
     });
-    variant.dispatchEvent(new Event('change'));
   }
 });
 </script>
