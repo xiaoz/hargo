@@ -6,7 +6,7 @@ URL = "products/"
 weight = 1
 
 [[main]]
-name = "Blog123"
+name = "Blog"
 URL = "blog/"
 weight = 2
 
@@ -19,6 +19,17 @@ weight = 3
 name = "Contact"
 URL = "contact/"
 weight = 4
+
+[[main]]
+name = "搜索1"
+url = "/search/"
+weight = 99
+pre = '''
+<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M11 19a8 8 0 110-16 8 8 0 010 16zm0-2a6 6 0 100-12 6 6 0 000 12z"/>
+  <path d="M21 21l-4.35-4.35"/>
+</svg>
+'''
 
 ############# footer menu #############
 [[footer]]

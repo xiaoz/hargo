@@ -35,6 +35,23 @@
           {{ end }}
         </ul>
       </div>
+
+<!-- 全站搜索框 -->
+<div class="search-box ms-3">
+  <form action="/search/" method="get" class="d-flex">
+    <input 
+  type="search" 
+  name="q" 
+  class="form-control" 
+  placeholder="Search products..." 
+  aria-label="Search"
+>
+    <button class="btn btn-primary ms-2" type="submit">Search</button>
+  </form>
+</div>
+
+
+
       <button class="cart snipcart-summary"><a href="" class="snipcart-checkout text-dark"><i class="ti-shopping-cart"></i><span class="badge badge-primary snipcart-items-count"></span></a></button>
     </nav>
   </div>

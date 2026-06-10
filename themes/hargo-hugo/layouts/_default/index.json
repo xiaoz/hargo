@@ -1,0 +1,13 @@
+{{- $.Scratch.Add "index" slice -}}
+{{- range where .Site.RegularPages "Section" "products" -}}
+{{- $.Scratch.Add "index" (dict
+  "title" .Title
+  "url" .Permalink
+  "tags" .Params.tags
+  "categories" .Params.categories
+  "description" (.Params.description | markdownify | plainify)
+  "content" (.Content | markdownify | plainify)
+  "section" .Section
+) -}}
+{{- end -}}
+{{- $.Scratch.Get "index" | jsonify -}}

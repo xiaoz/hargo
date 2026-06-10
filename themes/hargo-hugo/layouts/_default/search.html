@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ .Title }} - {{ .Site.Title }}</title>
+  {{ partial "head.html" . }}
+  <!-- Pagefind CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/pagefind@1.0.3/pagefind-ui.css">
+</head>
+<body>
+  {{ partial "header.html" . }}
+
+  <main class="container py-5">
+    <h1 class="mb-4">全站商品搜索</h1>
+    <div id="search"></div>
+  </main>
+
+  {{ partial "footer.html" . }}
+
+  <!-- Pagefind JS -->
+  <script src="https://unpkg.com/pagefind@1.0.3/pagefind-ui.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      new PagefindUI({
+        element: "#search",
+        showSubResults: true,
+        placeholder: "Search products...", // 英文搜索占位符
+        filters: { section: "products" },
+        highlightParam: "highlight",
+        sort: ["title"],
+        // 完整英文UI文案（覆盖默认翻译）
+        translations: {
+          placeholder: "Search products...",
+          clear: "Clear",
+          load_more: "Load more results",
+          zero_results: "No products found for [SEARCH_TERM]",
+          searching: "Searching...",
+          results_count: "[COUNT] results"
+        }
+      });
+    });
+    </script>
+</body>
+</html>
