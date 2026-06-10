@@ -38,14 +38,15 @@
 
 <!-- 全站搜索框 -->
 <div class="search-box ms-3">
-  <form action="/search/" method="get" class="d-flex">
+  <form action="/search/" method="get" class="d-flex" autocomplete="off">
     <input 
-  type="search" 
-  name="q" 
-  class="form-control" 
-  placeholder="Search products..." 
-  aria-label="Search"
->
+      type="search" 
+      name="q" 
+      class="form-control" 
+      placeholder="Search products..." 
+      aria-label="Search"
+      required
+    >
     <button class="btn btn-primary ms-2" type="submit">Search</button>
   </form>
 </div>

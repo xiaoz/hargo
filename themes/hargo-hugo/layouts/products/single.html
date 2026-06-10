@@ -2,7 +2,7 @@
 
 {{ partial "page-title.html" . }}
 
-<!-- 👇 核心：这里让 Pagefind 读取你所有商品字段 -->
+<!-- 👇 核心：Pagefind 搜索索引（100%匹配你的商品字段） -->
 <div data-pagefind-body style="display:none;">
   <span data-pagefind-filter="section">products</span>
   <span data-pagefind-meta="title">{{ .Title }}</span>
@@ -11,7 +11,10 @@
   <span data-pagefind-meta="categories">{{ delimit .Params.categories " " }}</span>
   <span data-pagefind-meta="tags">{{ delimit .Params.tags " " }}</span>
   <span data-pagefind-meta="description">{{ .Params.description }}</span>
-  
+   <!-- 👇 存第一张图给搜索结果用 -->
+   {{ with index .Params.images 0 }}
+   <span data-pagefind-meta="image">{{ .image | absURL }}</span>
+   {{ end }}
   {{ range .Params.variants }}
   <span data-pagefind-meta="variant">{{ .name }} {{ .price }}</span>
   {{ end }}
@@ -38,7 +41,25 @@
             {{ site.Params.currencySymbol }}{{ .Params.price }}
           </span>
         </div>
+        <!-- 👇 新增：商品分类 -->
+        {{ if .Params.categories }}
+        <div class="mb-2">
+          <strong class="text-dark">Category:</strong>
+          {{ range .Params.categories }}
+          <a href="/categories/{{ . | urlize }}" class="badge bg-secondary text-white ms-1">{{ . }}</a>
+          {{ end }}
+        </div>
+        {{ end }}
 
+        <!-- 👇 新增：商品标签 -->
+        {{ if .Params.tags }}
+        <div class="mb-3">
+          <strong class="text-dark">Tags:</strong>
+          {{ range .Params.tags }}
+          <span class="badge bg-light text-dark border ms-1">{{ . }}</span>
+          {{ end }}
+        </div>
+        {{ end }}
         <p class="text-muted">{{ .Params.description | markdownify }}</p>
 
         <!-- Variant Selector -->

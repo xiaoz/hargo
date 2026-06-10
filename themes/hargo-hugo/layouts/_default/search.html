@@ -5,7 +5,9 @@
   <title>{{ .Title }} - {{ .Site.Title }}</title>
   {{ partial "head.html" . }}
   <!-- Pagefind CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/pagefind@1.0.3/pagefind-ui.css">
+  <!-- <link rel="stylesheet" href="https://unpkg.com/pagefind@1.0.3/pagefind-ui.css"> -->
+  <!-- 引用 Pagefind 本地生成的资源（构建后自动存在，无需手动上传） -->
+<link rel="stylesheet" href="/pagefind/pagefind-ui.css">
 </head>
 <body>
   {{ partial "header.html" . }}
@@ -18,14 +20,18 @@
   {{ partial "footer.html" . }}
 
   <!-- Pagefind JS -->
-  <script src="https://unpkg.com/pagefind@1.0.3/pagefind-ui.js"></script>
+  <!-- <script src="https://unpkg.com/pagefind@1.0.3/pagefind-ui.js"></script> -->
+<script src="/pagefind/pagefind-ui.js"></script>
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       new PagefindUI({
         element: "#search",
         showSubResults: true,
         placeholder: "Search products...", // 英文搜索占位符
-        filters: { section: "products" },
+        showImages: true, // 👈 开启图片显示
+        excerptLength: 30, // 简介长度
+        filters: { section: "products" }, // 👈 强制只显示商品
+
         highlightParam: "highlight",
         sort: ["title"],
         lang: "en",
@@ -38,7 +44,25 @@
           searching: "Searching...",
           results_count: "[COUNT] results"
         }
+     
       });
+
+        // 重点：读取 URL ?q=xxx 并自动填入 + 搜索
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q');
+        if (q && q.trim() !== '') {
+            // 等待 Pagefind UI 挂载后再填值
+            const interval = setInterval(() => {
+            const input = document.querySelector('#search input');
+            if (input) {
+                input.value = q;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                clearInterval(interval);
+            }
+            }, 50);
+        }
+
+
     });
     </script>
 </body>

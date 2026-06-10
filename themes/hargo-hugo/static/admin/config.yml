@@ -28,7 +28,7 @@ collections:
         fields: 
           - { name: image, widget: image } 
       - { label: "商品分类", name: "categories", widget: list , field: { name: cat, widget: string }}
-      - { name: tags, label: "商品标签", widget: list, field: { name: tag, widget: string } }
+      - { label: "商品标签",name: tags,  widget: list, field: { name: tag, widget: string } }
       - { label: "商品简介", name: "description", widget: "text" }
       - { label: "上架状态", name: "draft", widget: "boolean", default: false }
       - label: "商品规格"
