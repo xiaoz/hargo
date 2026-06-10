@@ -66,38 +66,34 @@
         {{ if .Params.variants }}
         <div class="mb-3">
           <label class="font-weight-bold">Select Variant</label>
-          <select id="variant-select" class="form-control">
-            {{ range $idx, $v := .Params.variants }}
-            <option 
-              value="{{ $v.name }}" 
-              data-price="{{ $v.price }}"
-              data-variant-id="{{ $.Params.product_id }}-{{ $idx }}"
-            >
-              {{ $v.name }} - {{ site.Params.currencySymbol }}{{ $v.price }} (Stock: {{ $v.stock }})
-            </option>
-            {{ end }}
-          </select>
+            <select id="variantSelector" class="form-select mb-3">
+              {{ range $i, $v := .Params.variants }}
+                <option value="{{ $v.product_id }}" data-price="{{ $v.price }}">
+                  {{ $v.name }} - {{ site.Params.currencySymbol }}{{ $v.price }} (Stock: {{ $v.stock }})
+                </option>
+              {{ end }}
+              </select>
         </div>
         {{ end }}
         <!-- Add to Cart Button -->
-        <!-- Snipcart 加购按钮（原生支持变体，爬虫可校验） -->
-        <button
-        class="snipcart-add-item btn btn-primary w-100"
-        data-item-id="{{ .Params.product_id }}"
-        data-item-name="{{ .Title }}"
-        {{ with index .Params.images 0 }}
-        data-item-image="{{ .image | absURL }}"
-        {{ end }}
-        data-item-price="{{ .Params.price }}"
-        data-item-url="{{ .Permalink | absURL }}"
-        data-item-description="{{ .Params.description }}"
-        {{ if .Params.variants }}
-        data-item-has-variants="true"
-        {{ end }}
-        >
-        Add to Cart
-        </button>
-
+      <!-- 2. Snipcart 唯一按钮（ID固定为父SKU，爬虫能找到） -->
+      <button
+      id="snipcartBtn"
+      class="snipcart-add-item btn btn-primary w-100"
+      data-item-id="{{ .Params.product_id }}" 
+      data-item-name="{{ .Title }}"
+      {{ with index .Params.images 0 }}
+      data-item-image="{{ .image | absURL }}"
+      {{ end }}
+      data-item-price="{{ (index .Params.variants 0).price }}" 
+      data-item-url="{{ .Permalink }}"
+      data-item-description="{{ .Params.description }}"
+      data-item-has-variants="true"
+      data-item-custom1-name="规格"
+      data-item-custom1-options="{{ range $i, $v := .Params.variants }}{{ if $i }}|{{ end }}{{ $v.name }}{{ end }}"
+      >
+      Add to Cart
+      </button>
       </div>
 
       <div class="col-12 mt-5">
@@ -115,39 +111,29 @@
     </div>
   </div>
 </section>
-
+<!-- 3. 把所有变体输出成 JS 变量（供前端用） -->
+<script>
+  window.productVariants = {{ .Params.variants | jsonify }};
+  </script>
 <!-- Variant Switch JS -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const variantSelect = document.getElementById('variant-select');
-  const addBtn = document.querySelector('.snipcart-add-item');
-  const priceDisplay = document.getElementById('product-price');
-  const currency = '{{ site.Params.currencySymbol }}';
-  const defaultPrice = '{{ .Params.price }}';
-
-  if (variantSelect && addBtn) {
-    // 初始化默认选中项
-    const initOpt = variantSelect.options[variantSelect.selectedIndex];
-    priceDisplay.innerText = currency + initOpt.dataset.price;
-    addBtn.dataset.itemPrice = initOpt.dataset.price;
-    addBtn.dataset.itemId = initOpt.dataset.variantId;
-    addBtn.dataset.itemName = '{{ .Title }} - ' + initOpt.value;
-
-    // 切换规格
-    variantSelect.addEventListener('change', function () {
-      const opt = this.options[this.selectedIndex];
-      const newPrice = opt.dataset.price;
-      
-      // 更新页面展示价格
-      priceDisplay.innerText = currency + newPrice;
-      // 更新Snipcart 商品ID、价格、名称（变体独立ID）
-      addBtn.dataset.itemPrice = newPrice;
-      addBtn.dataset.itemId = opt.dataset.variantId;
-      addBtn.dataset.itemName = '{{ .Title }} - ' + opt.value;
-    });
+  const selector = document.getElementById('variantSelector');
+  const btn = document.getElementById('snipcartBtn');
+  
+  // 初始化：取当前选中项
+  function updateButton() {
+    const val = selector.value;
+    const price = selector.options[selector.selectedIndex].dataset.price;
+    const variant = window.productVariants.find(v => v.product_id === val);
+  
+    // 只改价格和自定义字段，**绝对不改 data-item-id**
+    btn.dataset.itemPrice = price;
+    btn.dataset.itemCustom1Value = variant.name;
+    btn.dataset.itemName = '{{ .Title }} - ' + variant.name;
   }
-});
-</script>
-
+  
+  selector.addEventListener('change', updateButton);
+  updateButton(); // 初始执行一次
+  </script>
 {{ partial "cta.html" . }}
 {{ end }}

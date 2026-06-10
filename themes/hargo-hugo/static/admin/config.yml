@@ -35,6 +35,8 @@ collections:
         name: "variants"
         widget: "list"
         fields:
+          # 👇 新增：规格独立ID（关键）
+          - { label: "规格ID", name: "product_id", widget: "string" }
           - { label: "规格名称", name: "name", widget: "string" }
           - { label: "规格价格", name: "price", widget: "number", value_type: "float" }
           - { label: "库存", name: "stock", widget: "number", default: 100 }
