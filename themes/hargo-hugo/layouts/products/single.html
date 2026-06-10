@@ -13,7 +13,7 @@
   <span data-pagefind-meta="image">{{ .image | absURL }}</span>
   {{ end }}
 </div>
-123
+234
 <section class="section pt-0">
   <div class="container">
     <div class="row">
@@ -74,12 +74,11 @@
           </select>
         </div>
         {{ end }}
-
-        <!-- Snipcart 按钮：静态用第一个规格，JS 只改 custom field 和 name -->
-        <button
+          <!-- Snipcart 按钮：ID=规格ID，价格=当前选中，name含规格 -->
+          <button
           id="snipcart-add-btn"
           class="snipcart-add-item btn btn-primary w-100"
-          data-item-id="{{ .Params.product_id }}"
+          data-item-id="{{ (index .Params.variants 0).product_id }}"
           data-item-name="{{ .Title }} - {{ (index .Params.variants 0).name }}"
           {{ with index .Params.images 0 }}
           data-item-image="{{ .image | absURL }}"
@@ -87,8 +86,6 @@
           data-item-price="{{ (index .Params.variants 0).price }}"
           data-item-url="{{ .Permalink | absURL }}"
           data-item-description="{{ .Params.description }}"
-          data-item-custom1-name="Variant"
-          data-item-custom1-value="{{ (index .Params.variants 0).name }}"
         >
           Add to Cart
         </button>
@@ -117,50 +114,30 @@ document.addEventListener('DOMContentLoaded', function () {
   const priceDisplay = document.getElementById('product-price');
   const addBtn = document.getElementById('snipcart-add-btn');
   const currency = '{{ site.Params.currencySymbol }}';
-
+  const title = '{{ .Title }}';
   let selectedPrice = parseFloat(variantSelect.options[0].dataset.price);
   let selectedName = variantSelect.options[0].dataset.name;
 
   // 初始化展示
   priceDisplay.innerText = currency + selectedPrice;
 
-  // 切换规格：只改展示 + 用 SDK 传给 Snipcart
-  variantSelect.addEventListener('change', function () {
-    const opt = this.options[this.selectedIndex];
-    selectedPrice = parseFloat(opt.dataset.price);
-    selectedName = opt.dataset.name;
+   // 切换规格 → 直接改按钮的 id/name/price（都是静态属性，Snipcart 认可）
+   variantSelect.addEventListener('change', function () {
+      const opt = this.options[this.selectedIndex];
+      const pid = opt.value;
+      const price = opt.dataset.price;
+      const name = opt.dataset.name;
 
-    // 1. 更新页面价格显示
-    priceDisplay.innerText = currency + selectedPrice;
+      // 页面价格
+      priceDisplay.innerText = currency + price;
 
-    // 2. 更新按钮上的 name 和 custom field（不改 data-price！）
-    addBtn.dataset.itemName = '{{ .Title }} - ' + selectedName;
-    addBtn.dataset.itemCustom1Value = selectedName;
+      // 按钮核心属性（全部更新）
+      addBtn.dataset.itemId = pid;
+      addBtn.dataset.itemName = title + ' - ' + name;
+      addBtn.dataset.itemPrice = price;
+    });
+  
   });
-
-  // 3. 点击加入购物车前，强制把当前规格价格/名称传给 Snipcart
-  addBtn.addEventListener('click', function (e) {
-    if (window.Snipcart && Snipcart.api && Snipcart.api.setItems) {
-      // 先清空同商品旧项（避免 id 重复导致价格错乱）
-      Snipcart.api.items.remove({ id: '{{ .Params.product_id }}' })
-        .then(() => {
-          // 再用当前选中的价格+规格加入
-          Snipcart.api.items.add({
-            id: '{{ .Params.product_id }}',
-            name: '{{ .Title }} - ' + selectedName,
-            price: selectedPrice,
-            url: '{{ .Permalink | absURL }}',
-            image: addBtn.dataset.itemImage,
-            description: '{{ .Params.description }}',
-            customFields: [
-              { name: 'Variant', value: selectedName }
-            ]
-          });
-        });
-      e.preventDefault();
-    }
-  });
-});
 </script>
 
 {{ partial "cta.html" . }}
