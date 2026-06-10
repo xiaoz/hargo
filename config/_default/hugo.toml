@@ -1,5 +1,5 @@
 ######################## default configuration ####################
-baseURL = "/"
+baseURL = "https://hargo.pages.dev/"
 languageCode = "en"
 title = "Hargo | Hugo Ecommerce Site"
 theme = "hargo-hugo"
