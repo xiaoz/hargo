@@ -109,6 +109,7 @@ copyright = "| Copyright &copy; 2019 [Gethugothemes](https://gethugothemes.com) 
 snipcartApiKey = "Yjg1M2YxMjMtNzgzNC00OTUwLWJlZmYtODI1YWI2YWFmNmU0NjM5MTYxNzQ0OTI5NTM1MTg4"
 currencySymbol = "$"
 
+
 # 开启搜索
 search = true
 # 商品内容类型（你的商品放 content/products）

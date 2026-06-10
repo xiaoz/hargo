@@ -1,25 +1,19 @@
 {{ define "main" }}
-
 {{ partial "page-title.html" . }}
 
-<!-- 👇 核心：Pagefind 搜索索引（100%匹配你的商品字段） -->
 <div data-pagefind-body style="display:none;">
   <span data-pagefind-filter="section">products</span>
   <span data-pagefind-meta="title">{{ .Title }}</span>
   <span data-pagefind-meta="product_id">{{ .Params.product_id }}</span>
-  <span data-pagefind-meta="price">{{ .Params.price }}</span>
+  <span data-pagefind-meta="price">{{ (index .Params.variants 0).price }}</span>
   <span data-pagefind-meta="categories">{{ delimit .Params.categories " " }}</span>
   <span data-pagefind-meta="tags">{{ delimit .Params.tags " " }}</span>
   <span data-pagefind-meta="description">{{ .Params.description }}</span>
-   <!-- 👇 存第一张图给搜索结果用 -->
-   {{ with index .Params.images 0 }}
-   <span data-pagefind-meta="image">{{ .image | absURL }}</span>
-   {{ end }}
-  {{ range .Params.variants }}
-  <span data-pagefind-meta="variant">{{ .name }} {{ .price }}</span>
+  {{ with index .Params.images 0 }}
+  <span data-pagefind-meta="image">{{ .image | absURL }}</span>
   {{ end }}
 </div>
-
+123
 <section class="section pt-0">
   <div class="container">
     <div class="row">
@@ -36,67 +30,68 @@
       <div class="col-lg-5 offset-lg-1">
         <h4 class="font-weight-medium">{{ .Title }}</h4>
 
+        <!-- 展示价格 -->
         <div class="my-3">
           <span class="lead text-primary font-weight-medium" id="product-price">
-            {{ site.Params.currencySymbol }}{{ .Params.price }}
+            {{ site.Params.currencySymbol }}{{ (index .Params.variants 0).price }}
           </span>
         </div>
-        <!-- 👇 新增：商品分类 -->
+
         {{ if .Params.categories }}
         <div class="mb-2">
-          <strong class="text-dark">Category:</strong>
+          <strong>Category:</strong>
           {{ range .Params.categories }}
-          <a href="/categories/{{ . | urlize }}" class="badge bg-secondary text-white ms-1">{{ . }}</a>
+            <span class="badge bg-secondary me-1">{{ . }}</span>
           {{ end }}
         </div>
         {{ end }}
 
-        <!-- 👇 新增：商品标签 -->
         {{ if .Params.tags }}
         <div class="mb-3">
-          <strong class="text-dark">Tags:</strong>
+          <strong>Tags:</strong>
           {{ range .Params.tags }}
-          <span class="badge bg-light text-dark border ms-1">{{ . }}</span>
+            <span class="badge bg-light text-dark me-1">{{ . }}</span>
           {{ end }}
         </div>
         {{ end }}
+
         <p class="text-muted">{{ .Params.description | markdownify }}</p>
 
-        <!-- 规格选择器 -->
+        <!-- 规格下拉 -->
         {{ if .Params.variants }}
         <div class="mb-3">
           <label class="font-weight-bold">Select Variant</label>
-      
-            <select id="variantSelector" class="form-control mb-3">
-              {{ range $i, $v := .Params.variants }}
-                <option value="{{ $v.product_id }}" data-price="{{ $v.price }}">
-                  {{ $v.name }} - {{ site.Params.currencySymbol }}{{ $v.price }} (Stock: {{ $v.stock }})
-                </option>
-              {{ end }}
-              </select>
-
-
+          <select id="variant-select" class="form-control">
+            {{ range .Params.variants }}
+            <option
+              value="{{ .product_id }}"
+              data-price="{{ .price }}"
+              data-name="{{ .name }}"
+            >
+              {{ .name }} - {{ site.Params.currencySymbol }}{{ .price }} (Stock: {{ .stock }})
+            </option>
+            {{ end }}
+          </select>
         </div>
         {{ end }}
-        <!-- Add to Cart Button -->
-      <!-- 2. Snipcart 唯一按钮（ID固定为父SKU，爬虫能找到） -->
-      <button
-      id="snipcartBtn"
-      class="snipcart-add-item btn btn-primary w-100"
-      data-item-id="{{ .Params.product_id }}" 
-      data-item-name="{{ .Title }}"
-      {{ with index .Params.images 0 }}
-      data-item-image="{{ .image | absURL }}"
-      {{ end }}
-      data-item-price="{{ (index .Params.variants 0).price }}" 
-      data-item-url="{{ .Permalink }}"
-      data-item-description="{{ .Params.description }}"
-      data-item-has-variants="true"
-      data-item-custom1-name="规格"
-      data-item-custom1-options="{{ range $i, $v := .Params.variants }}{{ if $i }}|{{ end }}{{ $v.name }}{{ end }}"
-      >
-      Add to Cart
-      </button>
+
+        <!-- Snipcart 按钮：静态用第一个规格，JS 只改 custom field 和 name -->
+        <button
+          id="snipcart-add-btn"
+          class="snipcart-add-item btn btn-primary w-100"
+          data-item-id="{{ .Params.product_id }}"
+          data-item-name="{{ .Title }} - {{ (index .Params.variants 0).name }}"
+          {{ with index .Params.images 0 }}
+          data-item-image="{{ .image | absURL }}"
+          {{ end }}
+          data-item-price="{{ (index .Params.variants 0).price }}"
+          data-item-url="{{ .Permalink | absURL }}"
+          data-item-description="{{ .Params.description }}"
+          data-item-custom1-name="Variant"
+          data-item-custom1-value="{{ (index .Params.variants 0).name }}"
+        >
+          Add to Cart
+        </button>
       </div>
 
       <div class="col-12 mt-5">
@@ -114,29 +109,59 @@
     </div>
   </div>
 </section>
-<!-- 3. 把所有变体输出成 JS 变量（供前端用） -->
+
+<!-- 关键：用 Snipcart 官方 SDK 改字段，而不是直接改 data-price -->
 <script>
-  window.productVariants = {{ .Params.variants | jsonify }};
-  </script>
-<!-- Variant Switch JS -->
-<script>
-  const selector = document.getElementById('variantSelector');
-  const btn = document.getElementById('snipcartBtn');
-  
-  // 初始化：取当前选中项
-  function updateButton() {
-    const val = selector.value;
-    const price = selector.options[selector.selectedIndex].dataset.price;
-    const variant = window.productVariants.find(v => v.product_id === val);
-  
-    // 只改价格和自定义字段，**绝对不改 data-item-id**
-    btn.dataset.itemPrice = price;
-    btn.dataset.itemCustom1Value = variant.name;
-    btn.dataset.itemName = '{{ .Title }} - ' + variant.name;
-  }
-  
-  selector.addEventListener('change', updateButton);
-  updateButton(); // 初始执行一次
-  </script>
+document.addEventListener('DOMContentLoaded', function () {
+  const variantSelect = document.getElementById('variant-select');
+  const priceDisplay = document.getElementById('product-price');
+  const addBtn = document.getElementById('snipcart-add-btn');
+  const currency = '{{ site.Params.currencySymbol }}';
+
+  let selectedPrice = parseFloat(variantSelect.options[0].dataset.price);
+  let selectedName = variantSelect.options[0].dataset.name;
+
+  // 初始化展示
+  priceDisplay.innerText = currency + selectedPrice;
+
+  // 切换规格：只改展示 + 用 SDK 传给 Snipcart
+  variantSelect.addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    selectedPrice = parseFloat(opt.dataset.price);
+    selectedName = opt.dataset.name;
+
+    // 1. 更新页面价格显示
+    priceDisplay.innerText = currency + selectedPrice;
+
+    // 2. 更新按钮上的 name 和 custom field（不改 data-price！）
+    addBtn.dataset.itemName = '{{ .Title }} - ' + selectedName;
+    addBtn.dataset.itemCustom1Value = selectedName;
+  });
+
+  // 3. 点击加入购物车前，强制把当前规格价格/名称传给 Snipcart
+  addBtn.addEventListener('click', function (e) {
+    if (window.Snipcart && Snipcart.api && Snipcart.api.setItems) {
+      // 先清空同商品旧项（避免 id 重复导致价格错乱）
+      Snipcart.api.items.remove({ id: '{{ .Params.product_id }}' })
+        .then(() => {
+          // 再用当前选中的价格+规格加入
+          Snipcart.api.items.add({
+            id: '{{ .Params.product_id }}',
+            name: '{{ .Title }} - ' + selectedName,
+            price: selectedPrice,
+            url: '{{ .Permalink | absURL }}',
+            image: addBtn.dataset.itemImage,
+            description: '{{ .Params.description }}',
+            customFields: [
+              { name: 'Variant', value: selectedName }
+            ]
+          });
+        });
+      e.preventDefault();
+    }
+  });
+});
+</script>
+
 {{ partial "cta.html" . }}
 {{ end }}
