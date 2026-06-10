@@ -66,13 +66,16 @@
         {{ if .Params.variants }}
         <div class="mb-3">
           <label class="font-weight-bold">Select Variant</label>
-            <select id="variantSelector" class="form-select mb-3">
+      
+            <select id="variantSelector" class="form-control mb-3">
               {{ range $i, $v := .Params.variants }}
                 <option value="{{ $v.product_id }}" data-price="{{ $v.price }}">
                   {{ $v.name }} - {{ site.Params.currencySymbol }}{{ $v.price }} (Stock: {{ $v.stock }})
                 </option>
               {{ end }}
               </select>
+
+
         </div>
         {{ end }}
         <!-- Add to Cart Button -->
