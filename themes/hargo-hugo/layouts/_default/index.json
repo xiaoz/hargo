@@ -3,11 +3,13 @@
 {{- $.Scratch.Add "index" (dict
   "title" .Title
   "url" .Permalink
-  "tags" .Params.tags
+  "product_id" .Params.product_id
+  "price" .Params.price
   "categories" .Params.categories
+  "tags" .Params.tags
   "description" (.Params.description | markdownify | plainify)
   "content" (.Content | markdownify | plainify)
-  "section" .Section
+  "variants" (.Params.variants | default slice)
 ) -}}
 {{- end -}}
 {{- $.Scratch.Get "index" | jsonify -}}

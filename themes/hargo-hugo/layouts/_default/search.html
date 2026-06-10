@@ -11,7 +11,7 @@
   {{ partial "header.html" . }}
 
   <main class="container py-5">
-    <h1 class="mb-4">全站商品搜索</h1>
+    <h1 class="mb-4">Search Products</h1>
     <div id="search"></div>
   </main>
 
@@ -28,6 +28,7 @@
         filters: { section: "products" },
         highlightParam: "highlight",
         sort: ["title"],
+        lang: "en",
         // 完整英文UI文案（覆盖默认翻译）
         translations: {
           placeholder: "Search products...",

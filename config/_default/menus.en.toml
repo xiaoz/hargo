@@ -21,7 +21,7 @@ URL = "contact/"
 weight = 4
 
 [[main]]
-name = "搜索1"
+name = ""
 url = "/search/"
 weight = 99
 pre = '''

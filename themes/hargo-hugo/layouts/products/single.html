@@ -2,6 +2,21 @@
 
 {{ partial "page-title.html" . }}
 
+<!-- 👇 核心：这里让 Pagefind 读取你所有商品字段 -->
+<div data-pagefind-body style="display:none;">
+  <span data-pagefind-filter="section">products</span>
+  <span data-pagefind-meta="title">{{ .Title }}</span>
+  <span data-pagefind-meta="product_id">{{ .Params.product_id }}</span>
+  <span data-pagefind-meta="price">{{ .Params.price }}</span>
+  <span data-pagefind-meta="categories">{{ delimit .Params.categories " " }}</span>
+  <span data-pagefind-meta="tags">{{ delimit .Params.tags " " }}</span>
+  <span data-pagefind-meta="description">{{ .Params.description }}</span>
+  
+  {{ range .Params.variants }}
+  <span data-pagefind-meta="variant">{{ .name }} {{ .price }}</span>
+  {{ end }}
+</div>
+
 <section class="section pt-0">
   <div class="container">
     <div class="row">
