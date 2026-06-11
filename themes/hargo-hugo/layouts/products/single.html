@@ -74,12 +74,14 @@
         </div>
         {{ end }}
 
+{{/* 读取当前商品主ID */}}
+{{ $mainSku := .Params.product_id | string }}
 <!-- Snipcart 爬虫专用：静态列出所有规格，隐藏 -->
 <div style="display:none">
   {{ range .Params.variants }}
     <button
       class="snipcart-add-item"
-      data-item-id="{{ .product_id }}"
+      data-item-id="{{ $mainSku }}-{{ .product_id }}"
       data-item-name="{{ $.Title }} - {{ .name }}"
       data-item-price="{{ .price }}"
       data-item-url="{{ $.Permalink }}"
@@ -94,7 +96,7 @@
           <button
           id="snipcart-add-btn"
           class="snipcart-add-item btn btn-primary w-100"
-          data-item-id="{{ (index .Params.variants 0).product_id }}"
+          data-item-id="{{ $mainSku }}-{{ (index .Params.variants 0).product_id }}"
           data-item-name="{{ .Title }} - {{ (index .Params.variants 0).name }}"
           {{ with index .Params.images 0 }}
           data-item-image="{{ .image | absURL }}"
