@@ -13,7 +13,6 @@
   <span data-pagefind-meta="image">{{ .image | absURL }}</span>
   {{ end }}
 </div>
-234
 <section class="section pt-0">
   <div class="container">
     <div class="row">
@@ -106,7 +105,10 @@
     </div>
   </div>
 </section>
-
+<!-- 3. 把所有变体输出成 JS 变量（供前端用） -->
+<script>
+  window.productVariants = {{ .Params.variants | jsonify }};
+  </script>
 <!-- 关键：用 Snipcart 官方 SDK 改字段，而不是直接改 data-price -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
