@@ -54,6 +54,10 @@
         </div>
         {{ end }}
 
+
+{{/* 读取当前商品主ID */}}
+{{ $mainSku := .Params.product_id | string }}
+
         <p class="text-muted">{{ .Params.description | markdownify }}</p>
 
         <!-- 规格下拉 -->
@@ -63,7 +67,7 @@
           <select id="variant-select" class="form-control">
             {{ range .Params.variants }}
             <option
-              value="{{ .product_id }}"
+              value="{{ $mainSku }}-{{ .product_id }}"
               data-price="{{ .price }}"
               data-name="{{ .name }}"
             >
@@ -74,8 +78,7 @@
         </div>
         {{ end }}
 
-{{/* 读取当前商品主ID */}}
-{{ $mainSku := .Params.product_id | string }}
+
 <!-- Snipcart 爬虫专用：静态列出所有规格，隐藏 -->
 <div style="display:none">
   {{ range .Params.variants }}
