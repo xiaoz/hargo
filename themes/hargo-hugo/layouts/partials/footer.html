@@ -122,3 +122,176 @@ ga('send', 'pageview');
 }(document, new Date(), "script", "rating-widget.com/"));
 </script>
 {{ end }}
+
+<script>
+  // ===================== 账号模块 =====================
+  // 注册
+  async function registerAccount(email, pwd) {
+    try {
+      await auth.createUserWithEmailAndPassword(email, pwd);
+      alert("注册成功，已自动登录");
+      location.reload();
+    } catch (err) {
+      alert("注册失败：" + err.message);
+    }
+  }
+  
+  // 登录
+  async function loginAccount(email, pwd) {
+    try {
+      await auth.signInWithEmailAndPassword(email, pwd);
+      alert("登录成功");
+      location.reload();
+    } catch (err) {
+      alert("登录失败：" + err.message);
+    }
+  }
+  
+  // 登出
+  async function logoutAccount() {
+    await auth.signOut();
+    location.reload();
+  }
+  
+  // 渲染导航栏登录状态
+  function renderUserNav() {
+    const navBox = document.getElementById("userNav");
+    if (!navBox) return;
+    if (currentUser) {
+      navBox.innerHTML = `
+        <span>您好：${currentUser.email}</span>
+        <a href="/favorite">我的收藏</a>
+        <a href="/address">收货地址</a>
+        <a href="javascript:logoutAccount()">退出登录</a>
+      `;
+    } else {
+      navBox.innerHTML = `
+        <a href="javascript:openLoginModal()">登录 / 注册</a>
+      `;
+    }
+  }
+  
+  // ===================== 收藏夹模块 =====================
+  // 获取当前用户收藏列表
+  async function getFavorites() {
+    if (!currentUser) return [];
+    const doc = await db.collection("users").doc(currentUser.uid).get();
+    const data = doc.data() || {};
+    return data.favorites || [];
+  }
+  
+  // 添加收藏
+  async function addFavorite(itemId) {
+    if (!currentUser) {
+      alert("请先登录");
+      return;
+    }
+    let list = await getFavorites();
+    if (!list.includes(itemId)) {
+      list.push(itemId);
+      await db.collection("users").doc(currentUser.uid).set({ favorites: list }, { merge: true });
+    }
+    alert("收藏成功");
+    location.reload();
+  }
+  
+  // 取消收藏
+  async function delFavorite(itemId) {
+    if (!currentUser) return;
+    let list = await getFavorites();
+    list = list.filter(id => id !== itemId);
+    await db.collection("users").doc(currentUser.uid).set({ favorites: list }, { merge: true });
+    alert("已取消收藏");
+    location.reload();
+  }
+  
+  // 判断是否已收藏
+  async function isFavorited(itemId) {
+    const list = await getFavorites();
+    return list.includes(itemId);
+  }
+  
+  // ===================== 收货地址模块 =====================
+  // 获取地址列表
+  async function getAddressList() {
+    if (!currentUser) return [];
+    const doc = await db.collection("users").doc(currentUser.uid).get();
+    const data = doc.data() || {};
+    return data.addressList || [];
+  }
+  
+  // 新增地址
+  async function addAddress(addr) {
+    if (!currentUser) {
+      alert("请先登录");
+      return;
+    }
+    let list = await getAddressList();
+    addr.id = Date.now().toString();
+    addr.isDefault = list.length === 0; // 第一条默认设为默认地址
+    list.push(addr);
+    await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
+    alert("地址添加成功");
+    location.reload();
+  }
+  
+  // 删除地址
+  async function delAddress(addrId) {
+    let list = await getAddressList();
+    list = list.filter(a => a.id !== addrId);
+    await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
+    location.reload();
+  }
+  
+  // 设置默认地址
+  async function setDefaultAddr(addrId) {
+    let list = await getAddressList();
+    list = list.map(a => {
+      a.isDefault = a.id === addrId;
+      return a;
+    });
+    await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
+    location.reload();
+  }
+  
+  // ===================== 登录弹窗 =====================
+  function openLoginModal() {
+    document.getElementById("loginModal").style.display = "block";
+  }
+  function closeLoginModal() {
+    document.getElementById("loginModal").style.display = "none";
+  }
+  
+  function submitLogin() {
+    const email = document.getElementById("loginEmail").value;
+    const pwd = document.getElementById("loginPwd").value;
+    loginAccount(email, pwd);
+  }
+  function submitRegister() {
+    const email = document.getElementById("loginEmail").value;
+    const pwd = document.getElementById("loginPwd").value;
+    registerAccount(email, pwd);
+  }
+  </script>
+
+<script>
+// 监听 Snipcart 结算页
+window.addEventListener('snipcart.ready', function(){
+  Snipcart.events.on('cart.opened', async function(){
+    if(!currentUser) return;
+    const addrList = await getAddressList();
+    const defaultAddr = addrList.find(a => a.isDefault);
+    if(!defaultAddr) return;
+
+    // 等待结算表单渲染完成后赋值
+    setTimeout(() => {
+      const nameInput = document.querySelector('input[name="shippingAddress.fullName"]');
+      const phoneInput = document.querySelector('input[name="shippingAddress.phone"]');
+      const addrInput = document.querySelector('textarea[name="shippingAddress.address"]');
+      if(nameInput) nameInput.value = defaultAddr.name;
+      if(phoneInput) phoneInput.value = defaultAddr.phone;
+      if(addrInput) addrInput.value = defaultAddr.detail;
+    }, 800);
+  });
+});
+</script>
