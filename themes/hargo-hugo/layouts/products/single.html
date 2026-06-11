@@ -73,6 +73,23 @@
           </select>
         </div>
         {{ end }}
+
+<!-- Snipcart 爬虫专用：静态列出所有规格，隐藏 -->
+<div style="display:none">
+  {{ range .Params.variants }}
+    <button
+      class="snipcart-add-item"
+      data-item-id="{{ .product_id }}"
+      data-item-name="{{ $.Title }} - {{ .name }}"
+      data-item-price="{{ .price }}"
+      data-item-url="{{ $.Permalink }}"
+    >
+      爬虫可见规格
+    </button>
+  {{ end }}
+  </div>
+
+
           <!-- Snipcart 按钮：ID=规格ID，价格=当前选中，name含规格 -->
           <button
           id="snipcart-add-btn"
