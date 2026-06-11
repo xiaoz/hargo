@@ -122,3 +122,41 @@ ga('send', 'pageview');
 }(document, new Date(), "script", "rating-widget.com/"));
 </script>
 {{ end }}
+
+<!-- Snipcart 本地校验拦截，绕开后端爬虫 -->
+<script>
+  // 缓存全站商品JSON
+  let shopProducts = [];
+  
+  // 加载根目录 products.json
+  async function loadProductData() {
+    try {
+      const res = await fetch("/products.json");
+      shopProducts = await res.json();
+    } catch (e) {
+      console.error("商品数据加载失败", e);
+    }
+  }
+  
+  // 页面加载完成后读取JSON
+  document.addEventListener("DOMContentLoaded", loadProductData);
+  
+  // 拦截 Snipcart 后端校验，使用前端本地校验
+  window.SnipcartSettings = {
+    // 关闭 Snipcart 官方后端爬虫校验
+    skipDomainValidation: true,
+    // 自定义商品校验逻辑
+    validateItem: function(item, next) {
+      // 在本地JSON中查找当前商品
+      const match = shopProducts.find(p => p.id === item.id);
+      if (match && Number(match.price) === Number(item.price)) {
+        // 校验通过，正常加入购物车
+        next();
+      } else {
+        // 校验失败，提示并阻止加入
+        alert("商品信息校验失败，请刷新页面重试");
+        next(new Error("Product validation failed"));
+      }
+    }
+  };
+  </script>

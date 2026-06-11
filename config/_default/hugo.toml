@@ -36,8 +36,14 @@ source = 'assets/.*\.(.*)$'
 target = '$1'
 
 ############################# Outputs ##############################
+# 定义 JSON 输出格式
+[outputFormats.productJSON]
+baseName = "products"
+mediaType = "application/json"
+isPlainText = true
+
 [outputs]
-home = ["HTML", "RSS","JSON"]
+home = ["HTML", "RSS","JSON","productJSON"]
 
 ############################# Imaging ##############################
 [imaging]

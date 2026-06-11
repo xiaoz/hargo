@@ -1,0 +1,24 @@
+{{- $allItems := slice -}}
+{{- /* 只遍历 products 栏目页面，排除当前 JSON 页面自身 */ -}}
+{{- range where .Site.Pages "Section" "products" -}}
+  {{- $page := . -}}
+  {{- $img := "" -}}
+  {{- if $page.Params.images -}}
+    {{- $img = (index $page.Params.images 0).image | absURL -}}
+  {{- end -}}
+
+  {{- /* 遍历每个规格 */ -}}
+  {{- range $page.Params.variants -}}
+    {{- $item := dict
+      "id" (string .product_id)
+      "name" (printf "%s - %s" $page.Title .name)
+      "price" .price
+      "url" $page.Permalink
+      "image" $img
+    -}}
+    {{- $allItems = $allItems | append $item -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* 纯 JSON 输出 */ -}}
+{{ $allItems | jsonify }}
