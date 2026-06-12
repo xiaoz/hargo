@@ -31,52 +31,151 @@
   {{ "<!-- Favicon -->" | safeHTML }}
   <link rel="shortcut icon" href="{{ `images/favicon.png` | absURL }} " type="image/x-icon">
   <link rel="icon" href="{{ `images/favicon.png` | absURL }} " type="image/x-icon">
-  <style>
-    /* 导航链接样式，和网站菜单统一 */
-    .user-nav {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .nav-link {
-      color: #333;
-      text-decoration: none;
-      font-size: 15px;
-    }
-    .nav-link:hover {
-      color: #000;
-      text-decoration: underline;
-    }
-    </style>
+
   <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
 <script>
-  // 👉 替换成你自己的 Firebase 配置
-  const firebaseConfig = {
-  apiKey: "AIzaSyBUYspfXcxxJaj406D0B1vGfwjTNMu-hwY",
-  authDomain: "myshop-190c1.firebaseapp.com",
-  projectId: "myshop-190c1",
-  storageBucket: "myshop-190c1.firebasestorage.app",
-  messagingSenderId: "885272323318",
-  appId: "1:885272323318:web:b61dc616e026166be638d7"
-};
-  
-  // 初始化 Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  
-  // 全局当前登录用户
-  let currentUser = null;
-  
-  // 监听登录状态变化
-  auth.onAuthStateChanged(user => {
-    currentUser = user;
-    renderUserNav(); // 刷新导航栏状态
-  });
 
-  </script>
+  // 👉 替换成你自己的 Firebase 配置
+const firebaseConfig = {
+apiKey: "AIzaSyBUYspfXcxxJaj406D0B1vGfwjTNMu-hwY",
+authDomain: "myshop-190c1.firebaseapp.com",
+projectId: "myshop-190c1",
+storageBucket: "myshop-190c1.firebasestorage.app",
+messagingSenderId: "885272323318",
+appId: "1:885272323318:web:b61dc616e026166be638d7"
+};
+
+// 初始化 Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// 全局当前登录用户
+let currentUser = null;
+
+// 监听登录状态变化
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  renderUserNav(); // 刷新导航栏状态
+});
+
+
+ 
+// ========== 账号逻辑 ==========
+async function registerAccount(email, pwd) {
+  try {
+    await auth.createUserWithEmailAndPassword(email, pwd);
+    alert("Registration successful, you are now logged in");
+    location.reload();
+  } catch (err) {
+    alert("Registration failed: " + err.message);
+  }
+}
+async function loginAccount(email, pwd) {
+  try {
+    await auth.signInWithEmailAndPassword(email, pwd);
+    alert("Login successful");
+    location.reload();
+  } catch (err) {
+    alert("Login failed: " + err.message);
+  }
+}
+async function logoutAccount() {
+  await auth.signOut();
+  location.reload();
+}
+
+// Modal control
+function openLoginModal() {
+  document.getElementById("loginModal").style.display = "flex";
+}
+function closeLoginModal() {
+  document.getElementById("loginModal").style.display = "none";
+}
+function submitLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pwd = document.getElementById("loginPwd").value.trim();
+  loginAccount(email, pwd);
+}
+function submitRegister() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pwd = document.getElementById("loginPwd").value.trim();
+  registerAccount(email, pwd);
+}
+
+// ========== Favorites Logic ==========
+async function getFavorites() {
+  if (!currentUser) return [];
+  const doc = await db.collection("users").doc(currentUser.uid).get();
+  const data = doc.data() || {};
+  return data.favorites || [];
+}
+async function addFavorite(itemId) {
+  if (!currentUser) {
+    alert("Please login first");
+    openLoginModal();
+    return;
+  }
+  let list = await getFavorites();
+  if (!list.includes(itemId)) {
+    list.push(itemId);
+    await db.collection("users").doc(currentUser.uid).set({ favorites: list }, { merge: true });
+  }
+  alert("Added to favorites");
+  location.reload();
+}
+async function delFavorite(itemId) {
+  if (!currentUser) return;
+  let list = await getFavorites();
+  list = list.filter(id => id !== itemId);
+  await db.collection("users").doc(currentUser.uid).set({ favorites: list }, { merge: true });
+  alert("Removed from favorites");
+  location.reload();
+}
+async function isFavorited(itemId) {
+  const list = await getFavorites();
+  return list.includes(itemId);
+}
+
+// ========== Address Logic ==========
+async function getAddressList() {
+  if (!currentUser) return [];
+  const doc = await db.collection("users").doc(currentUser.uid).get();
+  const data = doc.data() || {};
+  return data.addressList || [];
+}
+async function addAddress(addr) {
+  if (!currentUser) {
+    alert("Please login first");
+    openLoginModal();
+    return;
+  }
+  let list = await getAddressList();
+  addr.id = Date.now().toString();
+  addr.isDefault = list.length === 0;
+  list.push(addr);
+  await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
+  alert("Address added successfully");
+  location.reload();
+}
+async function delAddress(addrId) {
+  let list = await getAddressList();
+  list = list.filter(a => a.id !== addrId);
+  await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
+  location.reload();
+}
+async function setDefaultAddr(addrId) {
+  let list = await getAddressList();
+  list = list.map(a => {
+    a.isDefault = a.id === addrId;
+    return a;
+  });
+  await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
+  location.reload();
+}
+
+</script>
 </head>

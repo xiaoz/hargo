@@ -124,151 +124,23 @@ ga('send', 'pageview');
 {{ end }}
 
 <script>
-  function renderUserNav() {
-  const navBox = document.getElementById("userNav");
-  if (!navBox) return;
-  if (currentUser) {
-    // 已登录：显示用户名+收藏+地址+退出
-    navBox.innerHTML = `
-      <span class="nav-link">${currentUser.email}</span>
-      <a href="/favorite" class="nav-link">我的收藏</a>
-      <a href="/address" class="nav-link">收货地址</a>
-      <a href="javascript:logoutAccount()" class="nav-link">退出登录</a>
-    `;
-  } else {
-    // 未登录
-    navBox.innerHTML = `<a href="javascript:openLoginModal()" class="nav-link">登录 / 注册</a>`;
-  }
-}
 
-// 账号方法
-async function registerAccount(email, pwd) {
-  try {
-    await auth.createUserWithEmailAndPassword(email, pwd);
-    alert("注册成功，已自动登录");
-    location.reload();
-  } catch (err) {
-    alert("注册失败：" + err.message);
-  }
-}
-async function loginAccount(email, pwd) {
-  try {
-    await auth.signInWithEmailAndPassword(email, pwd);
-    alert("登录成功");
-    location.reload();
-  } catch (err) {
-    alert("登录失败：" + err.message);
-  }
-}
-async function logoutAccount() {
-  await auth.signOut();
-  location.reload();
-}
-
-// 弹窗控制
-function openLoginModal() {
-  document.getElementById("loginModal").style.display = "flex";
-}
-function closeLoginModal() {
-  document.getElementById("loginModal").style.display = "none";
-}
-function submitLogin() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const pwd = document.getElementById("loginPwd").value.trim();
-  loginAccount(email, pwd);
-}
-function submitRegister() {
-  const email = document.getElementById("loginEmail").value.trim();
-  const pwd = document.getElementById("loginPwd").value.trim();
-  registerAccount(email, pwd);
-}
-
-// 收藏夹方法
-async function getFavorites() {
-  if (!currentUser) return [];
-  const doc = await db.collection("users").doc(currentUser.uid).get();
-  const data = doc.data() || {};
-  return data.favorites || [];
-}
-async function addFavorite(itemId) {
-  if (!currentUser) {
-    alert("请先登录");
-    openLoginModal();
-    return;
-  }
-  let list = await getFavorites();
-  if (!list.includes(itemId)) {
-    list.push(itemId);
-    await db.collection("users").doc(currentUser.uid).set({ favorites: list }, { merge: true });
-  }
-  alert("收藏成功");
-  location.reload();
-}
-async function delFavorite(itemId) {
-  if (!currentUser) return;
-  let list = await getFavorites();
-  list = list.filter(id => id !== itemId);
-  await db.collection("users").doc(currentUser.uid).set({ favorites: list }, { merge: true });
-  alert("已取消收藏");
-  location.reload();
-}
-async function isFavorited(itemId) {
-  const list = await getFavorites();
-  return list.includes(itemId);
-}
-
-// 地址方法
-async function getAddressList() {
-  if (!currentUser) return [];
-  const doc = await db.collection("users").doc(currentUser.uid).get();
-  const data = doc.data() || {};
-  return data.addressList || [];
-}
-async function addAddress(addr) {
-  if (!currentUser) {
-    alert("请先登录");
-    openLoginModal();
-    return;
-  }
-  let list = await getAddressList();
-  addr.id = Date.now().toString();
-  addr.isDefault = list.length === 0;
-  list.push(addr);
-  await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
-  alert("地址添加成功");
-  location.reload();
-}
-async function delAddress(addrId) {
-  let list = await getAddressList();
-  list = list.filter(a => a.id !== addrId);
-  await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
-  location.reload();
-}
-async function setDefaultAddr(addrId) {
-  let list = await getAddressList();
-  list = list.map(a => {
-    a.isDefault = a.id === addrId;
-    return a;
+   
+  // ========== Snipcart 自动填充地址 ==========
+  window.addEventListener('snipcart.ready', function(){
+    Snipcart.events.on('cart.opened', async function(){
+      if(!currentUser) return;
+      const addrList = await getAddressList();
+      const defaultAddr = addrList.find(a => a.isDefault);
+      if(!defaultAddr) return;
+      setTimeout(() => {
+        const nameInput = document.querySelector('input[name="shippingAddress.fullName"]');
+        const phoneInput = document.querySelector('input[name="shippingAddress.phone"]');
+        const addrInput = document.querySelector('textarea[name="shippingAddress.address"]');
+        if(nameInput) nameInput.value = defaultAddr.name;
+        if(phoneInput) phoneInput.value = defaultAddr.phone;
+        if(addrInput) addrInput.value = defaultAddr.detail;
+      }, 800);
+    });
   });
-  await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
-  location.reload();
-}
-
-// Snipcart 自动填充地址
-window.addEventListener('snipcart.ready', function(){
-  Snipcart.events.on('cart.opened', async function(){
-    if(!currentUser) return;
-    const addrList = await getAddressList();
-    const defaultAddr = addrList.find(a => a.isDefault);
-    if(!defaultAddr) return;
-    setTimeout(() => {
-      const nameInput = document.querySelector('input[name="shippingAddress.fullName"]');
-      const phoneInput = document.querySelector('input[name="shippingAddress.phone"]');
-      const addrInput = document.querySelector('textarea[name="shippingAddress.address"]');
-      if(nameInput) nameInput.value = defaultAddr.name;
-      if(phoneInput) phoneInput.value = defaultAddr.phone;
-      if(addrInput) addrInput.value = defaultAddr.detail;
-    }, 800);
-  });
-});
-</script>
+  </script>

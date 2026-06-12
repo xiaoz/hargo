@@ -37,47 +37,86 @@
       </div>
 
 <!-- 全站搜索框 -->
-<div class="search-box ms-3">
+<div class="search-box ms-3" style="width: 25%;">
   <form action="/search/" method="get" class="d-flex" autocomplete="off">
-    <input 
-      type="search" 
-      name="q" 
-      class="form-control" 
-      placeholder="Search products..." 
+    <input
+      type="search"
+      name="q"
+      class="form-control"
+      placeholder="Search products..."
       aria-label="Search"
       required
+      style="border-radius: 20px 0 0 20px; border-right: none;"
     >
-    <button class="btn btn-primary ms-2" type="submit">Search</button>
+    <button class="btn btn-primary ms-0" type="submit" style="border-radius: 0 20px 20px 0;">
+      <i class="ti-search"></i>
+    </button>
   </form>
 </div>
 
-<div class="user-nav" id="userNav">
-  <a href="javascript:openLoginModal()" class="nav-link">登录 / 注册</a>
+
+<!-- 导航用户入口 -->
+<div id="userNav" style="display: inline-block; margin-left: 10px;">
+  <script>
+    // 渲染导航栏用户入口（图标版本）
+    function renderUserNav() {
+      const navBox = document.getElementById("userNav");
+      if (!navBox) return;
+      if (currentUser) {
+        navBox.innerHTML = `
+          <a href="/favorite" class="nav-link" style="color:#5AB51E; padding: 0 8px; display: inline-block;" title="My Favorites">
+            <i class="ti-heart"></i>
+          </a>
+          <a href="/address" class="nav-link" style="color:#5AB51E; padding: 0 8px; display: inline-block;" title="Shipping Addresses">
+            <i class="ti-location-pin"></i>
+          </a>
+          <a href="javascript:logoutAccount()" class="nav-link" style="color:#5AB51E; padding: 0 8px; display: inline-block;" title="Logout">
+            <i class="ti-power-off"></i>
+          </a>
+        `;
+      } else {
+        navBox.innerHTML = `
+          <a href="javascript:openLoginModal()" class="nav-link" style="color:#5AB51E; padding: 0 8px; display: inline-block;" title="Login / Register">
+            <i class="ti-user"></i>
+          </a>
+        `;
+      }
+    }
+
+    // 页面加载完成后立即调用一次，确保正确显示登录状态
+    document.addEventListener('DOMContentLoaded', function() {
+      renderUserNav();
+    });
+  </script>
 </div>
-      <button class="cart snipcart-summary"><a href="" class="snipcart-checkout text-dark"><i class="ti-shopping-cart"></i><span class="badge badge-primary snipcart-items-count"></span></a></button>
+
+      <button class="cart snipcart-summary" style="margin-left: 10px;"><a href="" class="snipcart-checkout text-dark"><i class="ti-shopping-cart"></i><span class="badge badge-primary snipcart-items-count"></span></a></button>
     </nav>
   </div>
-
-
-
-
 </header>
 
 
-<!-- 登录注册弹窗 样式适配网页 -->
-<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
-  <div style="background: #fff; width: 360px; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">账号登录 / 注册</h3>
-    <div style="margin-bottom: 15px;">
-      <input type="email" id="loginEmail" placeholder="请输入邮箱账号" style="width: 100%; box-sizing: border-box; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+<!-- 极简登录弹窗 无多余样式，适配全站 -->
+<div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4)
+;z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:2rem;border:1px solid #D1D1D1;min-width:300px;border-radius:8px;box-shadow:0 4px
+6px rgba(0,0,0,0.1);">
+    <h3 style="margin:0 0 1.5rem 0;font-size:16px;font-weight:500;color:#5AB51E;">Login / Register</h3>
+    <div style="margin-bottom:1rem;">
+      <input type="email" id="loginEmail" placeholder="Email" style="width:100%;padding:8px;border:1px solid
+#D1D1D1;outline:none;border-radius:4px;">
     </div>
-    <div style="margin-bottom: 25px;">
-      <input type="password" id="loginPwd" placeholder="请输入密码" style="width: 100%; box-sizing: border-box; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+    <div style="margin-bottom:1.5rem;">
+      <input type="password" id="loginPwd" placeholder="Password" style="width:100%;padding:8px;border:1px solid
+#D1D1D1;outline:none;border-radius:4px;">
     </div>
-    <div style="display: flex; gap: 12px;">
-      <button onclick="submitLogin()" style="flex: 1; padding: 12px; border: none; border-radius: 6px; background: #222; color: #fff; font-size: 14px; cursor: pointer;">登录</button>
-      <button onclick="submitRegister()" style="flex: 1; padding: 12px; border: 1px solid #222; border-radius: 6px; background: #fff; color: #222; font-size: 14px; cursor: pointer;">注册</button>
-      <button onclick="closeLoginModal()" style="padding: 12px 15px; border: 1px solid #999; border-radius: 6px; background: #fff; color: #666; font-size: 14px; cursor: pointer;">关闭</button>
+    <div style="display:flex;gap:10px;">
+      <button onclick="submitLogin()" style="padding:6px 16px;border:1px solid
+#5AB51E;background:#5AB51E;color:#fff;cursor:pointer;border-radius:4px;">Login</button>
+      <button onclick="submitRegister()" style="padding:6px 16px;border:1px solid
+#5AB51E;background:#fff;color:#5AB51E;cursor:pointer;border-radius:4px;">Register</button>
+      <button onclick="closeLoginModal()" style="padding:6px 16px;border:1px solid
+#D1D1D1;background:#fff;color:#666;cursor:pointer;border-radius:4px;">Close</button>
     </div>
   </div>
 </div>

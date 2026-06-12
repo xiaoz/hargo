@@ -93,11 +93,10 @@
     </button>
   {{ end }}
   </div>
-        <!-- 收藏按钮 -->
-        <button id="fav-add-btn" onclick="toggleFav('{{ $mainSku }}-{{ (index .Params.variants 0).product_id }}')">
-          收藏此规格
+        <button onclick="toggleFav('{{ $mainSku }}-{{ (index .Params.variants 0).product_id }}')" class="btn
+        btn-outline-primary" style="padding:6px 16px;margin-right:8px;">
+          Add to Favorites
         </button>
-
           <!-- Snipcart 按钮：ID=规格ID，价格=当前选中，name含规格 -->
           <button
           id="snipcart-add-btn"
