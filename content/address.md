@@ -35,30 +35,52 @@ async function saveNewAddr(){
   await addAddress({name,phone,detail});
 }
 
-(async function(){
-  let box = document.getElementById("addrList");
-  if(!currentUser){
-    box.innerHTML = '<p>Please <a href="javascript:openLoginModal()">login</a> first</p>';
-    return;
-  }
-  let list = await getAddressList();
-  if(list.length === 0){
-    box.innerHTML = '<p>No addresses saved yet</p>';
-    return;
-  }
-  let html = "";
-  list.forEach(item => {
-    html += `
-    <div style="padding:1rem 0;border-bottom:1px solid #eee;">
-      <p style="margin:0;">${item.name} | ${item.phone} ${item.isDefault ? " <strong>Default</strong>" : ""}</p>
-      <p style="margin:0.5rem 0;">${item.detail}</p>
-      <div style="margin-top:0.8rem;">
-        ${!item.isDefault ? `<button onclick="setDefaultAddr('${item.id}')" class="btn btn-outline-primary" style="padding:4px 12px;font-size:14px;">Set as Default</button>` : ""}
-        <button onclick="delAddress('${item.id}')" class="btn btn-outline-primary" style="padding:4px 12px;font-size:14px;">Delete</button>
+function renderAddressList() {
+  (async function(){
+    let box = document.getElementById("addrList");
+    if(!currentUser){
+      box.innerHTML = '<p>Please <a href="javascript:openLoginModal()">login</a> first</p>';
+      return;
+    }
+    let list = await getAddressList();
+    if(list.length === 0){
+      box.innerHTML = '<p>No addresses saved yet</p>';
+      return;
+    }
+    let html = "";
+    list.forEach(item => {
+      html += `
+      <div style="padding:1rem 0;border-bottom:1px solid #eee;">
+        <p style="margin:0;">${item.name} | ${item.phone} ${item.isDefault ? " <strong>Default</strong>" : ""}</p>
+        <p style="margin:0.5rem 0;">${item.detail}</p>
+        <div style="margin-top:0.8rem;">
+          ${!item.isDefault ? `<button onclick="setDefaultAddr('${item.id}')" class="btn btn-outline-primary" style="padding:4px 12px;font-size:14px;">Set as Default</button>` : ""}
+          <button onclick="delAddress('${item.id}')" class="btn btn-outline-primary" style="padding:4px 12px;font-size:14px;">Delete</button>
+        </div>
       </div>
-    </div>
-    `;
+      `;
+    });
+    box.innerHTML = html;
+  })();
+}
+
+// 页面加载完成后，或者在用户登录状态确定后，调用地址列表渲染函数
+if (typeof auth !== 'undefined') {
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    renderAddressList();
   });
-  box.innerHTML = html;
-})();
+} else {
+  // 如果 Firebase 还未初始化，等待一段时间后再尝试
+  setTimeout(() => {
+    if (typeof auth !== 'undefined') {
+      auth.onAuthStateChanged(user => {
+        currentUser = user;
+        renderAddressList();
+      });
+    } else {
+      console.error('Firebase Auth not initialized');
+    }
+  }, 1000);
+}
 </script>
