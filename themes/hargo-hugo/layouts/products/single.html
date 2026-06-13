@@ -1,18 +1,43 @@
 {{ define "main" }}
 {{ partial "page-title.html" . }}
 
+{{ $mainSku := .Params.product_id | string }}
+{{ $variants := .Params.variants }}
+{{ $basePrice := float (cond (gt (len $variants) 0) (index $variants 0).price .Params.price) }}
+{{ range $variants }}
+  {{ if lt (float .price) $basePrice }}
+    {{ $basePrice = float .price }}
+  {{ end }}
+{{ end }}
+{{ $variantOptions := slice }}
+{{ range $variants }}
+  {{ $variantName := .name }}
+  {{ if not $variantName }}
+    {{ $variantName = .option1_value }}
+    {{ with .option2_value }}{{ $variantName = printf "%s / %s" $variantName . }}{{ end }}
+  {{ end }}
+  {{ $diff := sub (float .price) $basePrice }}
+  {{ $option := $variantName }}
+  {{ if gt $diff 0.0 }}
+    {{ $option = printf "%s[+%.2f]" $variantName $diff }}
+  {{ end }}
+  {{ $variantOptions = $variantOptions | append $option }}
+{{ end }}
+
 <div data-pagefind-body style="display:none;">
   <span data-pagefind-filter="section">products</span>
   <span data-pagefind-meta="title">{{ .Title }}</span>
   <span data-pagefind-meta="product_id">{{ .Params.product_id }}</span>
-  <span data-pagefind-meta="price">{{ (index .Params.variants 0).price }}</span>
+  <span data-pagefind-meta="price">{{ $basePrice }}</span>
   <span data-pagefind-meta="categories">{{ delimit .Params.categories " " }}</span>
   <span data-pagefind-meta="tags">{{ delimit .Params.tags " " }}</span>
   <span data-pagefind-meta="description">{{ .Params.description }}</span>
+  {{ with .Params.brand }}<span data-pagefind-meta="brand">{{ . }}</span>{{ end }}
   {{ with index .Params.images 0 }}
   <span data-pagefind-meta="image">{{ .image | absURL }}</span>
   {{ end }}
 </div>
+
 <section class="section pt-0">
   <div class="container">
     <div class="row">
@@ -20,21 +45,39 @@
         <div class="product-slider">
           {{ range .Params.images }}
           <div data-image="{{ .image | absURL }}">
-            {{ partial "image.html" (dict "Src" .image "Alt" "product image" "Class" "img-fluid w-100") }}
+            {{ partial "image.html" (dict "Src" .image "Alt" (default $.Title .alt) "Class" "img-fluid w-100") }}
           </div>
           {{ end }}
         </div>
       </div>
 
       <div class="col-lg-5 offset-lg-1">
+        {{ with .Params.brand }}
+        <p class="text-primary font-weight-medium mb-2">{{ . }}</p>
+        {{ end }}
+
         <h4 class="font-weight-medium">{{ .Title }}</h4>
 
-        <!-- 展示价格 -->
         <div class="my-3">
+          {{ with .Params.compare_at_price }}
+          <s class="text-muted mr-2">{{ site.Params.currencySymbol }}{{ . }}</s>
+          {{ end }}
           <span class="lead text-primary font-weight-medium" id="product-price">
-            {{ site.Params.currencySymbol }}{{ (index .Params.variants 0).price }}
+            {{ site.Params.currencySymbol }}{{ $basePrice }}
           </span>
         </div>
+
+        {{ with .Params.availability }}
+        <div class="mb-3">
+          {{ if eq . "in_stock" }}
+          <span class="badge badge-success">In Stock</span>
+          {{ else if eq . "out_of_stock" }}
+          <span class="badge badge-secondary">Out of Stock</span>
+          {{ else if eq . "preorder" }}
+          <span class="badge badge-warning">Preorder</span>
+          {{ end }}
+        </div>
+        {{ end }}
 
         {{ if .Params.categories }}
         <div class="mb-2">
@@ -54,50 +97,49 @@
         </div>
         {{ end }}
 
-
-{{/* Product main SKU */}}
-{{ $mainSku := .Params.product_id | string }}
-{{ $basePrice := float (index .Params.variants 0).price }}
-{{ range .Params.variants }}
-  {{ if lt (float .price) $basePrice }}
-    {{ $basePrice = float .price }}
-  {{ end }}
-{{ end }}
-{{ $variantOptions := slice }}
-{{ range .Params.variants }}
-  {{ $diff := sub (float .price) $basePrice }}
-  {{ $option := .name }}
-  {{ if gt $diff 0.0 }}
-    {{ $option = printf "%s[+%.2f]" .name $diff }}
-  {{ end }}
-  {{ $variantOptions = $variantOptions | append $option }}
-{{ end }}
-
         <p class="text-muted">{{ .Params.description | markdownify }}</p>
 
-        {{ if .Params.variants }}
-        <div class="mb-3">
-          <label class="font-weight-bold">Select Variant</label>
-          <select id="variant-select" class="form-control">
-            {{ range .Params.variants }}
-            <option
-              value="{{ .name }}"
-              data-price="{{ .price }}"
-              data-name="{{ .name }}"
-            >
-              {{ .name }} - {{ site.Params.currencySymbol }}{{ .price }}{{ with .stock }} (Stock: {{ . }}){{ end }}
-            </option>
-            {{ end }}
-          </select>
+        {{ with .Params.features }}
+        <ul class="list-unstyled mb-4">
+          {{ range . }}
+          <li class="mb-2"><i class="ti-check text-primary mr-2"></i>{{ . }}</li>
+          {{ end }}
+        </ul>
+        {{ end }}
+
+        {{ if $variants }}
+        <div class="mb-3" id="variant-picker">
+          <label class="font-weight-bold d-block">Select Variant</label>
+          <div id="variant-one-level" class="d-none">
+            <div id="variant-single-options" class="d-flex flex-wrap" style="gap:8px;"></div>
+          </div>
+          <div id="variant-two-level" class="d-none">
+            <div class="mb-3">
+              <div id="variant-option1-label" class="small font-weight-bold mb-2"></div>
+              <div id="variant-option1-options" class="d-flex flex-wrap" style="gap:8px;"></div>
+            </div>
+            <div>
+              <div id="variant-option2-label" class="small font-weight-bold mb-2"></div>
+              <div id="variant-option2-options" class="d-flex flex-wrap" style="gap:8px;"></div>
+            </div>
+          </div>
           <small class="text-muted d-block mt-2">You can also change the variant in the cart.</small>
         </div>
         {{ end }}
 
-        <button onclick="toggleFav('{{ $mainSku }}')" class="btn
-        btn-outline-primary" style="padding:6px 16px;margin-right:8px;">
+        {{ with .Params.shipping_note }}
+        <p class="small text-muted mb-3"><i class="ti-truck text-primary mr-2"></i>{{ . }}</p>
+        {{ end }}
+
+        {{ with .Params.product_weight }}
+        <p class="small text-muted mb-3">Weight: {{ . }} kg</p>
+        {{ end }}
+
+        <button onclick="toggleFav('{{ $mainSku }}')" class="btn btn-outline-primary" style="padding:6px 16px;margin-right:8px;">
           Add to Favorites
         </button>
-          <button
+
+        <button
           id="snipcart-add-btn"
           class="snipcart-add-item btn btn-primary w-100"
           data-item-id="{{ $mainSku }}"
@@ -108,10 +150,12 @@
           data-item-price="{{ $basePrice }}"
           data-item-url="{{ .Permalink | absURL }}"
           data-item-description="{{ .Params.description }}"
+          {{ if $variantOptions }}
           data-item-custom1-name="Variant"
           data-item-custom1-type="dropdown"
           data-item-custom1-options="{{ delimit $variantOptions "|" }}"
           data-item-custom1-required="true"
+          {{ end }}
         >
           Add to Cart
         </button>
@@ -122,16 +166,34 @@
           <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#description">Description</a>
           </li>
+          {{ if .Params.faqs }}
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#faq">FAQ</a>
+          </li>
+          {{ end }}
         </ul>
         <div class="tab-content mt-3">
           <div class="tab-pane fade show active" id="description">
             <div class="content">{{ .Content }}</div>
           </div>
+          {{ if .Params.faqs }}
+          <div class="tab-pane fade" id="faq">
+            <div class="content">
+              {{ range .Params.faqs }}
+              <div class="mb-4">
+                <h5>{{ .question }}</h5>
+                <p>{{ .answer }}</p>
+              </div>
+              {{ end }}
+            </div>
+          </div>
+          {{ end }}
         </div>
       </div>
     </div>
   </div>
 </section>
+
 <script>
 async function toggleFav(itemId) {
   const hasFav = await isFavorited(itemId);
@@ -143,23 +205,138 @@ async function toggleFav(itemId) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  const variantSelect = document.getElementById('variant-select');
+  let variants = {{ $variants | jsonify | safeJS }};
+  variants = Array.isArray(variants) ? variants : Object.values(variants || {});
   const priceDisplay = document.getElementById('product-price');
   const addBtn = document.getElementById('snipcart-add-btn');
+  const oneLevelBox = document.getElementById('variant-one-level');
+  const twoLevelBox = document.getElementById('variant-two-level');
+  const singleOptions = document.getElementById('variant-single-options');
+  const option1Label = document.getElementById('variant-option1-label');
+  const option1Options = document.getElementById('variant-option1-options');
+  const option2Label = document.getElementById('variant-option2-label');
+  const option2Options = document.getElementById('variant-option2-options');
   const currency = '{{ site.Params.currencySymbol }}';
 
-  if (!variantSelect || !priceDisplay || !addBtn) return;
+  if (!variants || !variants.length || !priceDisplay || !addBtn) return;
 
-  function syncSelectedVariant() {
-    const opt = variantSelect.options[variantSelect.selectedIndex];
-    const price = opt.dataset.price;
+  let selectedOption1 = null;
+  let selectedOption2 = null;
 
-    priceDisplay.innerText = currency + price;
-    addBtn.dataset.itemCustom1Value = opt.value;
+  function getVariantName(variant) {
+    if (variant.name) return variant.name;
+    if (variant.option2_value) return `${variant.option1_value} / ${variant.option2_value}`;
+    return variant.option1_value;
   }
 
-  syncSelectedVariant();
-  variantSelect.addEventListener('change', syncSelectedVariant);
+  function unique(list) {
+    return [...new Set(list.filter(Boolean))];
+  }
+
+  function setActive(group, value) {
+    group.querySelectorAll('.variant-option').forEach(button => {
+      const active = button.dataset.value === value;
+      button.classList.toggle('btn-primary', active);
+      button.classList.toggle('btn-outline-primary', !active);
+    });
+  }
+
+  function syncVariant(variant) {
+    if (!variant) return;
+    const variantName = getVariantName(variant);
+    priceDisplay.innerText = currency + variant.price;
+    addBtn.dataset.itemCustom1Value = variantName;
+  }
+
+  function createButton(label, value, extraText) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'variant-option btn btn-outline-primary';
+    button.dataset.value = value;
+    button.style.padding = '8px 16px';
+    button.innerHTML = `<span>${label}</span>${extraText ? `<small class="d-block">${extraText}</small>` : ''}`;
+    return button;
+  }
+
+  function renderSingleLevel() {
+    oneLevelBox.classList.remove('d-none');
+    twoLevelBox.classList.add('d-none');
+    singleOptions.innerHTML = '';
+
+    variants.forEach((variant, index) => {
+      const variantName = getVariantName(variant);
+      const button = createButton(variantName, variantName, `${currency}${variant.price}${variant.stock !== undefined ? ` · Stock: ${variant.stock}` : ''}`);
+      button.addEventListener('click', function () {
+        setActive(singleOptions, variantName);
+        syncVariant(variant);
+      });
+      singleOptions.appendChild(button);
+      if (index === 0) {
+        setTimeout(() => {
+          setActive(singleOptions, variantName);
+          syncVariant(variant);
+        }, 0);
+      }
+    });
+  }
+
+  function renderOption1() {
+    const option1Name = variants[0].option1_name || 'Option 1';
+    option1Label.innerText = option1Name;
+    option1Options.innerHTML = '';
+
+    unique(variants.map(item => item.option1_value)).forEach(value => {
+      const button = createButton(value, value);
+      button.addEventListener('click', function () {
+        selectedOption1 = value;
+        selectedOption2 = null;
+        setActive(option1Options, value);
+        renderOption2();
+      });
+      option1Options.appendChild(button);
+    });
+  }
+
+  function renderOption2() {
+    const option2Name = variants.find(item => item.option1_value === selectedOption1)?.option2_name || 'Option 2';
+    const availableOption2 = unique(variants
+      .filter(item => item.option1_value === selectedOption1)
+      .map(item => item.option2_value));
+
+    option2Label.innerText = option2Name;
+    option2Options.innerHTML = '';
+
+    availableOption2.forEach(value => {
+      const variant = variants.find(item => item.option1_value === selectedOption1 && item.option2_value === value);
+      const button = createButton(value, value, variant ? `${currency}${variant.price}${variant.stock !== undefined ? ` · Stock: ${variant.stock}` : ''}` : '');
+      button.addEventListener('click', function () {
+        selectedOption2 = value;
+        setActive(option2Options, value);
+        syncVariant(variant);
+      });
+      option2Options.appendChild(button);
+    });
+
+    if (availableOption2.length) {
+      selectedOption2 = availableOption2[0];
+      setActive(option2Options, selectedOption2);
+      syncVariant(variants.find(item => item.option1_value === selectedOption1 && item.option2_value === selectedOption2));
+    }
+  }
+
+  const hasTwoLevelVariants = variants.some(item => item.option1_value && item.option2_value);
+
+  if (!hasTwoLevelVariants) {
+    renderSingleLevel();
+    return;
+  }
+
+  oneLevelBox.classList.add('d-none');
+  twoLevelBox.classList.remove('d-none');
+  renderOption1();
+  selectedOption1 = variants[0].option1_value;
+  setActive(option1Options, selectedOption1);
+  renderOption2();
 });
 </script>
 

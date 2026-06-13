@@ -3,9 +3,9 @@ display_url: https://hargo.pages.dev
 
 backend:
   name: github
-  repo: xiaoz/hargo   # 你的 GitHub 仓库
+  repo: xiaoz/hargo
   branch: main
-  base_url: https://sveltia-cms-auth.24409917.workers.dev  # 你的 Worker 地址
+  base_url: https://sveltia-cms-auth.24409917.workers.dev
 
 media_folder: static/images
 public_folder: /images
@@ -14,34 +14,274 @@ publish_mode: editorial_workflow
 
 collections:
   - name: products
-    label: 商品管理
+    label: Products
     folder: content/products
     create: true
-    slug: "{{slug}}"
+    slug: "{{fields.product_id}}"
+    summary: "{{title}} — {{product_id}}"
     fields:
-      - { label: "商品名称", name: "title", widget: "string" }
-      - { label: "商品ID(SKU)", name: "product_id", widget: "string" }
-      - { label: "基础价格", name: "price", widget: "number", value_type: "float" }
-      - label: "商品图片"
-        name: "images"
-        widget: "list" 
-        fields: 
-          - { name: image, widget: image } 
-      - { label: "商品分类", name: "categories", widget: list , field: { name: cat, widget: string }}
-      - { label: "商品标签",name: tags,  widget: list, field: { name: tag, widget: string } }
-      - { label: "商品简介", name: "description", widget: "text" }
-      - { label: "上架状态", name: "draft", widget: "boolean", default: false }
-      - label: "商品规格"
-        name: "variants"
-        widget: "list"
+      - label: Product Name
+        name: title
+        widget: string
+        hint: Use an English product name for international customers.
+        pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+      - label: Product SKU
+        name: product_id
+        widget: string
+        hint: "Unique SKU. Example: SKU-20260613-001. Only letters, numbers, hyphens and underscores are allowed."
+        pattern: ["^[A-Za-z0-9_-]+$", "Only letters, numbers, hyphens and underscores are allowed"]
+
+      - label: Brand
+        name: brand
+        widget: string
+        required: false
+        hint: "Example: Hargo"
+
+      - label: Categories
+        name: categories
+        widget: select
+        multiple: true
+        min: 1
+        options:
+          - Skincare
+          - Makeup
+          - Hair Care
+          - Body Care
+          - Beauty Tools
+          - Health Care
+          - Accessories
+          - Home & Lifestyle
+          - New Arrivals
+          - Sale
+
+      - label: Tags
+        name: tags
+        widget: select
+        multiple: true
+        required: false
+        options:
+          - New Arrival
+          - Best Seller
+          - Hot Sale
+          - Organic
+          - Natural
+          - Vegan
+          - Handmade
+          - Gift
+          - Travel Size
+          - Premium
+
+      - label: Base Price
+        name: price
+        widget: number
+        value_type: float
+        min: 0
+        step: 0.01
+        hint: "Numbers only. Example: 19.99"
+
+      - label: Compare at Price
+        name: compare_at_price
+        widget: number
+        value_type: float
+        min: 0
+        step: 0.01
+        required: false
+        hint: Optional original price for discount display.
+
+      - label: Availability
+        name: availability
+        widget: select
+        default: in_stock
+        options:
+          - { label: In Stock, value: in_stock }
+          - { label: Out of Stock, value: out_of_stock }
+          - { label: Preorder, value: preorder }
+
+      - label: Featured Product
+        name: featured
+        widget: boolean
+        default: false
+        required: false
+
+      - label: Sort Weight
+        name: weight
+        widget: number
+        value_type: int
+        min: 0
+        step: 1
+        required: false
+        hint: Lower numbers appear earlier where sorting by weight is used.
+
+      - label: Short Description
+        name: description
+        widget: text
+        hint: A concise English product summary.
+        pattern: ["^[\\x00-\\x7F\\n\\r]+$", "Please use English only"]
+
+      - label: Key Features
+        name: features
+        widget: list
+        required: false
+        summary: "{{fields.feature}}"
+        field:
+          label: Feature
+          name: feature
+          widget: string
+          pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+      - label: Product Images
+        name: images
+        widget: list
+        min: 1
+        summary: "{{fields.image}}"
         fields:
-          # 👇 新增：规格独立ID（关键）
-          - { label: "规格ID", name: "product_id", widget: "string" }
-          - { label: "规格名称", name: "name", widget: "string" }
-          - { label: "规格价格", name: "price", widget: "number", value_type: "float" }
-          - { label: "库存", name: "stock", widget: "number", default: 100 }
-      - { label: "商品详情", name: "body", widget: "markdown" }
-      # ===================== 博客文章 =====================
+          - label: Image
+            name: image
+            widget: image
+          - label: Alt Text
+            name: alt
+            widget: string
+            required: false
+            hint: Describe the image for SEO and accessibility.
+            pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+      - label: Product Variants
+        name: variants
+        widget: list
+        min: 1
+        summary: "{{fields.name}} — ${{fields.price}}"
+        fields:
+          - label: Variant SKU
+            name: product_id
+            widget: string
+            hint: "Unique variant SKU. Example: black-m or 100ml-white."
+            pattern: ["^[A-Za-z0-9_-]+$", "Only letters, numbers, hyphens and underscores are allowed"]
+
+          - label: Option 1 Name
+            name: option1_name
+            widget: select
+            default: Color
+            options:
+              - Color
+              - Size
+              - Style
+              - Material
+              - Capacity
+              - Scent
+              - Package
+
+          - label: Option 1 Value
+            name: option1_value
+            widget: string
+            hint: "Example: Black, White, 50ml, Lavender."
+            pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+          - label: Option 2 Name
+            name: option2_name
+            widget: select
+            required: false
+            options:
+              - Size
+              - Color
+              - Style
+              - Material
+              - Capacity
+              - Scent
+              - Package
+
+          - label: Option 2 Value
+            name: option2_value
+            widget: string
+            required: false
+            hint: "Optional second-level variant value. Example: M, 100ml."
+            pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+          - label: Display Name
+            name: name
+            widget: string
+            hint: "Example: Black / M. This is shown on the storefront and in cart."
+            pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+          - label: Variant Price
+            name: price
+            widget: number
+            value_type: float
+            min: 0
+            step: 0.01
+
+          - label: Stock
+            name: stock
+            widget: number
+            value_type: int
+            min: 0
+            step: 1
+            default: 100
+
+      - label: Weight
+        name: product_weight
+        widget: number
+        value_type: float
+        min: 0
+        step: 0.01
+        required: false
+        hint: Product weight in kg.
+
+      - label: Shipping Note
+        name: shipping_note
+        widget: string
+        required: false
+        hint: "Example: Ships within 3-5 business days."
+        pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+      - label: Product FAQs
+        name: faqs
+        widget: list
+        required: false
+        summary: "{{fields.question}}"
+        fields:
+          - label: Question
+            name: question
+            widget: string
+            pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+          - label: Answer
+            name: answer
+            widget: text
+            pattern: ["^[\\x00-\\x7F\\n\\r]+$", "Please use English only"]
+
+      - label: SEO Title
+        name: seo_title
+        widget: string
+        required: false
+        hint: "Recommended length: 50-60 characters."
+        pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+      - label: Meta Description
+        name: meta_description
+        widget: text
+        required: false
+        hint: "Recommended length: 120-160 characters."
+        pattern: ["^[\\x00-\\x7F\\n\\r]+$", "Please use English only"]
+
+      - label: SEO Keywords
+        name: seo_keywords
+        widget: list
+        required: false
+        field:
+          label: Keyword
+          name: keyword
+          widget: string
+          pattern: ["^[\\x00-\\x7F]+$", "Please use English only"]
+
+      - label: Draft
+        name: draft
+        widget: boolean
+        default: false
+
+      - label: Product Details
+        name: body
+        widget: markdown
+
   - name: blog
     label: Blog
     folder: content/blog

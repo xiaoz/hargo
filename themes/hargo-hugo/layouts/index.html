@@ -167,41 +167,33 @@
         {{ end }}
       </div>
       {{ range first 6 (where site.RegularPages "Type" "products") }}
+      {{ $price := .Params.price }}
+      {{ with .Params.variants }}
+        {{ $price = (index . 0).price }}
+        {{ range . }}
+          {{ if lt (float .price) (float $price) }}{{ $price = .price }}{{ end }}
+        {{ end }}
+      {{ end }}
       <div class="col-lg-4 col-sm-6 mb-4">
         <div class="card border-0 text-center">
           <a href="{{ .Permalink }}">
             {{ with .Params.images }}
               {{ range first 1 . }}
-                {{ partial "image.html" (dict "Src" .image "Alt" $.Title "Class" "card-img-top") }}
+                {{ partial "image.html" (dict "Src" .image "Alt" (default $.Title .alt) "Class" "card-img-top") }}
               {{ end }}
             {{ end }}
           </a>
           <div class="card-body">
+            {{ with .Params.brand }}<p class="text-primary small font-weight-medium mb-1">{{ . }}</p>{{ end }}
             <a href="{{ .Permalink }}" class="h4">{{ .Title }}</a>
             <p>{{ .Params.description }}</p>
             <div class="mb-4">
-              {{ if .Params.priceBefore }}
-              <s>{{ site.Params.currencySymbol }}{{ .Params.priceBefore }}</s>
+              {{ with .Params.compare_at_price }}
+              <s>{{ site.Params.currencySymbol }}{{ . }}</s>
               {{ end }}
-              <span class="lead text-primary">{{ site.Params.currencySymbol }}{{ .Params.price }}</span>
+              <span class="lead text-primary">{{ site.Params.currencySymbol }}{{ $price }}</span>
             </div>
-
-            {{ if and .Params.product_id .Params.price }}
-            <button class="snipcart-add-item btn btn-sm btn-outline-primary"
-              data-item-id="{{ .Params.product_id }}"
-              data-item-name="{{ .Title }}"
-              {{ with .Params.images }}
-                {{ range first 1 . }}
-                  data-item-image="{{ .image | absURL }}"
-                {{ end }}
-              {{ end }}
-              data-item-price="{{ .Params.price }}"
-              data-item-url="{{ .Permalink }}"
-              data-item-description="{{ .Params.description }}">
-              Add to cart
-            </button>
-            {{ end }}
-
+            <a href="{{ .Permalink }}" class="btn btn-sm btn-outline-primary">View Details</a>
           </div>
         </div>
       </div>
