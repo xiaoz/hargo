@@ -55,60 +55,63 @@
         {{ end }}
 
 
-{{/* 读取当前商品主ID */}}
+{{/* Product main SKU */}}
 {{ $mainSku := .Params.product_id | string }}
+{{ $basePrice := float (index .Params.variants 0).price }}
+{{ range .Params.variants }}
+  {{ if lt (float .price) $basePrice }}
+    {{ $basePrice = float .price }}
+  {{ end }}
+{{ end }}
+{{ $variantOptions := slice }}
+{{ range .Params.variants }}
+  {{ $diff := sub (float .price) $basePrice }}
+  {{ $option := .name }}
+  {{ if gt $diff 0.0 }}
+    {{ $option = printf "%s[+%.2f]" .name $diff }}
+  {{ end }}
+  {{ $variantOptions = $variantOptions | append $option }}
+{{ end }}
 
         <p class="text-muted">{{ .Params.description | markdownify }}</p>
 
-        <!-- 规格下拉 -->
         {{ if .Params.variants }}
         <div class="mb-3">
           <label class="font-weight-bold">Select Variant</label>
           <select id="variant-select" class="form-control">
             {{ range .Params.variants }}
             <option
-              value="{{ $mainSku }}-{{ .product_id }}"
+              value="{{ .name }}"
               data-price="{{ .price }}"
               data-name="{{ .name }}"
             >
-              {{ .name }} - {{ site.Params.currencySymbol }}{{ .price }} (Stock: {{ .stock }})
+              {{ .name }} - {{ site.Params.currencySymbol }}{{ .price }}{{ with .stock }} (Stock: {{ . }}){{ end }}
             </option>
             {{ end }}
           </select>
+          <small class="text-muted d-block mt-2">You can also change the variant in the cart.</small>
         </div>
         {{ end }}
 
-
-<!-- Snipcart 爬虫专用：静态列出所有规格，隐藏 -->
-<div style="display:none">
-  {{ range .Params.variants }}
-    <button
-      class="snipcart-add-item"
-      data-item-id="{{ $mainSku }}-{{ .product_id }}"
-      data-item-name="{{ $.Title }} - {{ .name }}"
-      data-item-price="{{ .price }}"
-      data-item-url="{{ $.Permalink }}"
-    >
-      爬虫可见规格
-    </button>
-  {{ end }}
-  </div>
-        <button onclick="toggleFav('{{ $mainSku }}-{{ (index .Params.variants 0).product_id }}')" class="btn
+        <button onclick="toggleFav('{{ $mainSku }}')" class="btn
         btn-outline-primary" style="padding:6px 16px;margin-right:8px;">
           Add to Favorites
         </button>
-          <!-- Snipcart 按钮：ID=规格ID，价格=当前选中，name含规格 -->
           <button
           id="snipcart-add-btn"
           class="snipcart-add-item btn btn-primary w-100"
-          data-item-id="{{ $mainSku }}-{{ (index .Params.variants 0).product_id }}"
-          data-item-name="{{ .Title }} - {{ (index .Params.variants 0).name }}"
+          data-item-id="{{ $mainSku }}"
+          data-item-name="{{ .Title }}"
           {{ with index .Params.images 0 }}
           data-item-image="{{ .image | absURL }}"
           {{ end }}
-          data-item-price="{{ (index .Params.variants 0).price }}"
+          data-item-price="{{ $basePrice }}"
           data-item-url="{{ .Permalink | absURL }}"
           data-item-description="{{ .Params.description }}"
+          data-item-custom1-name="Variant"
+          data-item-custom1-type="dropdown"
+          data-item-custom1-options="{{ delimit $variantOptions "|" }}"
+          data-item-custom1-required="true"
         >
           Add to Cart
         </button>
@@ -129,14 +132,7 @@
     </div>
   </div>
 </section>
-<!-- 3. 把所有变体输出成 JS 变量（供前端用） -->
 <script>
-  window.productVariants = {{ .Params.variants | jsonify }};
-  </script>
-<!-- 关键：用 Snipcart 官方 SDK 改字段，而不是直接改 data-price -->
-<script>
-
-  // 切换收藏状态
 async function toggleFav(itemId) {
   const hasFav = await isFavorited(itemId);
   if(hasFav) {
@@ -146,36 +142,25 @@ async function toggleFav(itemId) {
   }
 }
 
-
 document.addEventListener('DOMContentLoaded', function () {
   const variantSelect = document.getElementById('variant-select');
   const priceDisplay = document.getElementById('product-price');
   const addBtn = document.getElementById('snipcart-add-btn');
   const currency = '{{ site.Params.currencySymbol }}';
-  const title = '{{ .Title }}';
-  let selectedPrice = parseFloat(variantSelect.options[0].dataset.price);
-  let selectedName = variantSelect.options[0].dataset.name;
 
-  // 初始化展示
-  priceDisplay.innerText = currency + selectedPrice;
+  if (!variantSelect || !priceDisplay || !addBtn) return;
 
-   // 切换规格 → 直接改按钮的 id/name/price（都是静态属性，Snipcart 认可）
-   variantSelect.addEventListener('change', function () {
-      const opt = this.options[this.selectedIndex];
-      const pid = opt.value;
-      const price = opt.dataset.price;
-      const name = opt.dataset.name;
+  function syncSelectedVariant() {
+    const opt = variantSelect.options[variantSelect.selectedIndex];
+    const price = opt.dataset.price;
 
-      // 页面价格
-      priceDisplay.innerText = currency + price;
+    priceDisplay.innerText = currency + price;
+    addBtn.dataset.itemCustom1Value = opt.value;
+  }
 
-      // 按钮核心属性（全部更新）
-      addBtn.dataset.itemId = pid;
-      addBtn.dataset.itemName = title + ' - ' + name;
-      addBtn.dataset.itemPrice = price;
-    });
-  
-  });
+  syncSelectedVariant();
+  variantSelect.addEventListener('change', syncSelectedVariant);
+});
 </script>
 
 {{ partial "cta.html" . }}
