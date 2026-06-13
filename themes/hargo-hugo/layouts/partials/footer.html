@@ -124,23 +124,102 @@ ga('send', 'pageview');
 {{ end }}
 
 <script>
+function waitForCurrentUser() {
+  return new Promise(resolve => {
+    if (currentUser) return resolve(currentUser);
+    if (typeof auth === 'undefined') return resolve(null);
 
-   
-  // ========== Snipcart 自动填充地址 ==========
-  window.addEventListener('snipcart.ready', function(){
-    Snipcart.events.on('cart.opened', async function(){
-      if(!currentUser) return;
-      const addrList = await getAddressList();
-      const defaultAddr = addrList.find(a => a.isDefault);
-      if(!defaultAddr) return;
-      setTimeout(() => {
-        const nameInput = document.querySelector('input[name="shippingAddress.fullName"]');
-        const phoneInput = document.querySelector('input[name="shippingAddress.phone"]');
-        const addrInput = document.querySelector('textarea[name="shippingAddress.address"]');
-        if(nameInput) nameInput.value = defaultAddr.name;
-        if(phoneInput) phoneInput.value = defaultAddr.phone;
-        if(addrInput) addrInput.value = defaultAddr.detail;
-      }, 800);
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      currentUser = user;
+      unsubscribe();
+      resolve(user);
     });
   });
-  </script>
+}
+
+function setSnipcartField(selectors, value) {
+  if (!value) return;
+  selectors.forEach(selector => {
+    const field = document.querySelector(selector);
+    if (!field) return;
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
+async function fillSnipcartAddress() {
+  const user = await waitForCurrentUser();
+  if (!user) return;
+
+  const addrList = await getAddressList();
+  const defaultAddr = addrList.find(a => a.isDefault) || addrList[0];
+  if (!defaultAddr) return;
+
+  const fullAddress = [defaultAddr.address1, defaultAddr.address2].filter(Boolean).join(', ');
+
+  const fill = () => {
+    setSnipcartField([
+      'input[name="shippingAddress.fullName"]',
+      'input[name="billingAddress.fullName"]',
+      'input[name="customer.name"]',
+      'input[name="name"]'
+    ], defaultAddr.name);
+
+    setSnipcartField([
+      'input[name="shippingAddress.phone"]',
+      'input[name="billingAddress.phone"]',
+      'input[name="customer.phone"]',
+      'input[name="phone"]'
+    ], defaultAddr.phone);
+
+    setSnipcartField([
+      'input[name="shippingAddress.address1"]',
+      'input[name="shippingAddress.address"]',
+      'textarea[name="shippingAddress.address"]',
+      'input[name="billingAddress.address1"]',
+      'input[name="billingAddress.address"]',
+      'textarea[name="billingAddress.address"]'
+    ], defaultAddr.address1 || fullAddress);
+
+    setSnipcartField([
+      'input[name="shippingAddress.address2"]',
+      'input[name="billingAddress.address2"]'
+    ], defaultAddr.address2);
+
+    setSnipcartField([
+      'input[name="shippingAddress.city"]',
+      'input[name="billingAddress.city"]'
+    ], defaultAddr.city);
+
+    setSnipcartField([
+      'input[name="shippingAddress.province"]',
+      'input[name="shippingAddress.state"]',
+      'input[name="billingAddress.province"]',
+      'input[name="billingAddress.state"]'
+    ], defaultAddr.state);
+
+    setSnipcartField([
+      'input[name="shippingAddress.postalCode"]',
+      'input[name="shippingAddress.zip"]',
+      'input[name="billingAddress.postalCode"]',
+      'input[name="billingAddress.zip"]'
+    ], defaultAddr.postalCode);
+
+    setSnipcartField([
+      'input[name="shippingAddress.country"]',
+      'select[name="shippingAddress.country"]',
+      'input[name="billingAddress.country"]',
+      'select[name="billingAddress.country"]'
+    ], defaultAddr.country);
+  };
+
+  [300, 800, 1500, 2500, 4000].forEach(delay => setTimeout(fill, delay));
+}
+
+window.addEventListener('snipcart.ready', function(){
+  Snipcart.events.on('cart.opened', fillSnipcartAddress);
+  Snipcart.events.on('page.changed', fillSnipcartAddress);
+  Snipcart.events.on('shippingselected', fillSnipcartAddress);
+});
+</script>

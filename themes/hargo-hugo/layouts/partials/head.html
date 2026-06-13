@@ -144,11 +144,25 @@ async function isFavorited(itemId) {
 }
 
 // ========== Address Logic ==========
+function normalizeAddress(addr) {
+  return {
+    id: addr.id || Date.now().toString(),
+    name: addr.name || '',
+    phone: addr.phone || '',
+    country: addr.country || '',
+    state: addr.state || addr.province || '',
+    city: addr.city || '',
+    postalCode: addr.postalCode || addr.zip || '',
+    address1: addr.address1 || addr.detail || '',
+    address2: addr.address2 || '',
+    isDefault: !!addr.isDefault
+  };
+}
 async function getAddressList() {
   if (!currentUser) return [];
   const doc = await db.collection("users").doc(currentUser.uid).get();
   const data = doc.data() || {};
-  return data.addressList || [];
+  return (data.addressList || []).map(normalizeAddress);
 }
 async function addAddress(addr) {
   if (!currentUser) {
@@ -157,9 +171,10 @@ async function addAddress(addr) {
     return;
   }
   let list = await getAddressList();
-  addr.id = Date.now().toString();
-  addr.isDefault = list.length === 0;
-  list.push(addr);
+  const newAddr = normalizeAddress(addr);
+  newAddr.id = Date.now().toString();
+  newAddr.isDefault = list.length === 0;
+  list.push(newAddr);
   await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
   alert("Address added successfully");
   location.reload();
@@ -167,6 +182,7 @@ async function addAddress(addr) {
 async function delAddress(addrId) {
   let list = await getAddressList();
   list = list.filter(a => a.id !== addrId);
+  if (list.length && !list.some(a => a.isDefault)) list[0].isDefault = true;
   await db.collection("users").doc(currentUser.uid).set({ addressList: list }, { merge: true });
   location.reload();
 }
